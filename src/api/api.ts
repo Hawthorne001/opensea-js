@@ -1,6 +1,7 @@
 import { ethers } from "ethers";
 import {
   getCollectionPath,
+  getCollectionsPath,
   getOrdersAPIPath,
   getPostCollectionOfferPath,
   getBuildOfferPath,
@@ -18,10 +19,12 @@ import {
   getAccountPath,
   getCollectionStatsPath,
   getBestListingsAPIPath,
+  getCancelOrderPath,
 } from "./apiPaths";
 import {
   BuildOfferResponse,
   GetCollectionResponse,
+  GetCollectionsResponse,
   ListNFTsResponse,
   GetNFTResponse,
   ListCollectionOffersResponse,
@@ -31,6 +34,9 @@ import {
   GetOffersResponse,
   GetListingsResponse,
   CollectionOffer,
+  CollectionOrderByOption,
+  CancelOrderResponse,
+  GetCollectionsArgs,
 } from "./types";
 import { API_BASE_MAINNET, API_BASE_TESTNET } from "../constants";
 import {
@@ -66,14 +72,6 @@ import {
   isTestChain,
   accountFromJSON,
 } from "../utils/utils";
-
-function stall(duration: number): Promise<void> {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve();
-    }, duration);
-  });
-}
 
 /**
  * The API class for the OpenSea SDK.
@@ -120,7 +118,7 @@ export class OpenSeaAPI {
   /**
    * Gets an order from API based on query options.
    * @param options
-   * @param options.side The side of the order (buy or sell
+   * @param options.side The side of the order (listing or offer)
    * @param options.protocol The protocol, typically seaport, to query orders for
    * @param options.orderDirection The direction to sort the orders
    * @param options.orderBy The field to sort the orders by
@@ -308,7 +306,7 @@ export class OpenSeaAPI {
     side: OrderSide,
   ): Promise<FulfillmentDataResponse> {
     let payload: object | null = null;
-    if (side === OrderSide.ASK) {
+    if (side === OrderSide.LISTING) {
       payload = getFulfillListingPayload(
         fulfillerAddress,
         orderHash,
@@ -533,6 +531,40 @@ export class OpenSeaAPI {
   }
 
   /**
+   * Fetch a list of OpenSea collections.
+   * @param orderBy The order to return the collections in. Default: CREATED_DATE
+   * @param chain The chain to filter the collections on. Default: all chains
+   * @param creatorUsername The creator's OpenSea username to filter the collections on.
+   * @param includeHidden If hidden collections should be returned. Default: false
+   * @param limit The limit of collections to return.
+   * @param next The cursor for the next page of results. This is returned from a previous request.
+   * @returns List of {@link OpenSeaCollection} returned by the API.
+   */
+  public async getCollections(
+    orderBy: CollectionOrderByOption = CollectionOrderByOption.CREATED_DATE,
+    chain?: Chain,
+    creatorUsername?: string,
+    includeHidden: boolean = false,
+    limit?: number,
+    next?: string,
+  ): Promise<GetCollectionsResponse> {
+    const path = getCollectionsPath();
+    const args: GetCollectionsArgs = {
+      order_by: orderBy,
+      chain,
+      creator_username: creatorUsername,
+      include_hidden: includeHidden,
+      limit,
+      next,
+    };
+    const response = await this.get<GetCollectionsResponse>(path, args);
+    response.collections = response.collections.map((collection) =>
+      collectionFromJSON(collection),
+    );
+    return response;
+  }
+
+  /**
    * Fetch stats for an OpenSea collection.
    * @param slug The slug (identifier) of the collection.
    * @returns The {@link OpenSeaCollection} returned by the API.
@@ -589,6 +621,33 @@ export class OpenSeaAPI {
       {},
     );
 
+    return response;
+  }
+
+  /**
+   * Offchain cancel an order, offer or listing, by its order hash when protected by the SignedZone.
+   * Protocol and Chain are required to prevent hash collisions.
+   * Please note cancellation is only assured if a fulfillment signature was not vended prior to cancellation.
+   * @param protocolAddress The Seaport address for the order.
+   * @param orderHash The order hash, or external identifier, of the order.
+   * @param chain The chain where the order is located.
+   * @param offererSignature An EIP-712 signature from the offerer of the order.
+   *                         If this is not provided, the user associated with the API Key will be checked instead.
+   *                         The signature must be a EIP-712 signature consisting of the order's Seaport contract's
+   *                         name, version, address, and chain. The struct to sign is `OrderHash` containing a
+   *                         single bytes32 field.
+   * @returns The response from the API.
+   */
+  public async offchainCancelOrder(
+    protocolAddress: string,
+    orderHash: string,
+    chain: Chain = this.chain,
+    offererSignature?: string,
+  ): Promise<CancelOrderResponse> {
+    const response = await this.post<CancelOrderResponse>(
+      getCancelOrderPath(chain, protocolAddress, orderHash),
+      { offererSignature },
+    );
     return response;
   }
 
@@ -659,16 +718,7 @@ export class OpenSeaAPI {
     }
 
     // Set the throttle params
-    // - Should be able to replace this retryFunc with `setThrottleParams({ slotInterval: 1000 })`
-    //   when this bug is fixed in ethers: https://github.com/ethers-io/ethers.js/issues/4663
-    req.retryFunc = async (_req, resp, attempt) => {
-      this.logger(
-        `Fetch attempt ${attempt} failed with status ${resp.statusCode}`,
-      );
-      // Wait 1s between tries
-      await stall(1000);
-      return true;
-    };
+    req.setThrottleParams({ slotInterval: 1000 });
 
     this.logger(
       `Sending request: ${url} ${JSON.stringify({
