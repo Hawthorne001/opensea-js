@@ -8,6 +8,7 @@ import {
   type TransactionRequest,
   type TransactionResponse,
 } from "ethers"
+import { inferPrimaryType } from "../utils/eip712"
 import type { ViemAdapterParams } from "./viem-adapter"
 
 /**
@@ -145,9 +146,7 @@ class ViemEthersSigner extends AbstractSigner {
   }
 
   async signTypedData(domain: any, types: any, value: any): Promise<string> {
-    const primaryType =
-      Object.keys(types).find(key => key !== "EIP712Domain") ||
-      Object.keys(types)[0]
+    const primaryType = inferPrimaryType(types)
 
     return this._walletClient.signTypedData({
       domain: {

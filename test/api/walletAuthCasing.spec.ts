@@ -1,8 +1,8 @@
-import { existsSync, readFileSync } from "node:fs"
-import { resolve } from "node:path"
 import { beforeEach, describe, expect, it, vi } from "vitest"
+import { OpenSeaAPI } from "../../src/api/api"
 import type { WalletAuthFetcher } from "../../src/api/fetcher"
 import { WalletAuthAPI } from "../../src/api/walletAuth"
+import { readOpenApiSpec } from "../utils/openapiSpec"
 
 /**
  * Request-body casing for wallet-auth writes.
@@ -17,36 +17,6 @@ import { WalletAuthAPI } from "../../src/api/walletAuth"
  * These tests pin the opt-out for the endpoints that need it, and guard against
  * a new camelCase endpoint being added without one.
  */
-
-/**
- * Locate the OpenAPI spec.
- *
- * `node_modules/@opensea/api-types/opensea-api.json` comes first because it is
- * the only location that exists in **both** contexts this suite runs in: a
- * workspace symlink in the monorepo, and the installed package on the public
- * `opensea-sdk` mirror, where `packages/api-types/` doesn't exist at all and
- * api-types is an ordinary npm dependency. (`opensea-api.json` is in the
- * package's `files`, so it ships.) The monorepo paths stay as a fallback for
- * a checkout whose deps aren't installed.
- *
- * Deliberately not `import.meta.url`: `tsconfig.check.json` compiles the tests
- * under a module setting that disallows it.
- */
-function findSpecPath(): string {
-  let dir = process.cwd()
-  for (let depth = 0; depth < 5; depth++) {
-    for (const relative of [
-      "node_modules/@opensea/api-types/opensea-api.json",
-      "packages/api-types/opensea-api.json",
-      "../api-types/opensea-api.json",
-    ]) {
-      const candidate = resolve(dir, relative)
-      if (existsSync(candidate)) return candidate
-    }
-    dir = resolve(dir, "..")
-  }
-  throw new Error("Could not locate opensea-api.json")
-}
 
 /** Operations whose request body is camelCase on the wire, per the OpenAPI spec. */
 const KNOWN_CAMELCASE_OPERATIONS = [
@@ -68,10 +38,7 @@ const KNOWN_CAMELCASE_OPERATIONS = [
 ].sort()
 
 function camelCaseRequestOperations(): string[] {
-  const spec = JSON.parse(readFileSync(findSpecPath(), "utf8")) as {
-    components: { schemas: Record<string, unknown> }
-    paths: Record<string, Record<string, unknown>>
-  }
+  const spec = readOpenApiSpec()
   const schemas = spec.components.schemas as Record<
     string,
     {
@@ -215,6 +182,47 @@ describe("wallet-auth request body casing", () => {
     } as never)
 
     expect(optionsOf(request.mock.calls[0])?.snakeizeBody).toBeUndefined()
+  })
+
+  it("puts the agent handshake on the wire as snake_case", async () => {
+    // Every test above stubs the fetcher, so none of them prove the default path
+    // converts anything. A caller reading `proposeAgentRelationship` sees the body
+    // handed straight to `request` and can reasonably conclude they must supply
+    // the wire shape themselves. They must not, and guessing wrong is expensive:
+    // the API answers a camelCase body with 400 "Missing required field
+    // 'counterparty_address'". This drives the real fetcher and pins the bytes.
+    const bodies: string[] = []
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init: RequestInit) => {
+        bodies.push(init.body as string)
+        return new Response(JSON.stringify({ created: false }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        })
+      }),
+    )
+
+    try {
+      const live = new OpenSeaAPI({ apiKey: "key", authToken: "jwt" })
+      const proposal = {
+        counterpartyAddress: "0xowner",
+        callerRole: "AGENT",
+      } as const
+
+      await live.walletAuth.proposeAgentRelationship(proposal)
+      await live.walletAuth.confirmAgentRelationship(proposal)
+    } finally {
+      vi.unstubAllGlobals()
+    }
+
+    expect(bodies).toHaveLength(2)
+    for (const body of bodies) {
+      expect(JSON.parse(body)).toEqual({
+        counterparty_address: "0xowner",
+        caller_role: "AGENT",
+      })
+    }
   })
 
   it("flags any new camelCase request body so its casing gets a decision", () => {

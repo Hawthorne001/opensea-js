@@ -3,6 +3,7 @@ import type { Listing, Offer } from "../api/types"
 import type { OrderV2 } from "../orders/types"
 import { DEFAULT_SEAPORT_CONTRACT_ADDRESS } from "../orders/utils"
 import { type Chain, EventType } from "../types"
+import { checksumAddress } from "../utils/address"
 import {
   getChainId,
   getSeaportInstance,
@@ -179,7 +180,11 @@ export class CancellationManager {
 
     const addProtocolAddress = (value: string) => {
       requireValidProtocol(value)
-      protocolAddresses.add(value)
+      // Keyed by checksummed form. An address is the same protocol whatever
+      // case it arrives in, and orders from different sources arrive in
+      // different cases, so a raw-string Set counted one protocol as several
+      // and rejected a batch that was fine.
+      protocolAddresses.add(checksumAddress(value))
     }
 
     if (orders) {

@@ -6,6 +6,7 @@ import {
   isZeroConduitKey,
   toBigInt,
 } from "../../src/orders/erc20Fulfillment"
+import { payloadNamed, preflightInput } from "./erc20FulfillmentFixtures"
 
 const USDG = "0x1234567890123456789012345678901234567890"
 const OTHER_ERC20 = "0x9876543210987654321098765432109876543210"
@@ -51,12 +52,18 @@ function erc721Item(tokenId: string, recipient = SELLER) {
   }
 }
 
-function advancedOrderInput(consideration: unknown[]) {
+function advancedOrderInput(
+  consideration: unknown[],
+  {
+    numerator = 1,
+    denominator = 1,
+  }: { numerator?: unknown; denominator?: unknown } = {},
+) {
   return {
     advancedOrder: {
       parameters: { offerer: SELLER, consideration },
-      numerator: 1,
-      denominator: 1,
+      numerator,
+      denominator,
       signature: "0x",
       extraData: "0x",
     },
@@ -66,23 +73,38 @@ function advancedOrderInput(consideration: unknown[]) {
   }
 }
 
-/** basicOrderType 8 is route 2, ERC20_TO_ERC721: the fulfiller pays with ERC20. */
+/**
+ * A basic-order fulfillment input, built on the flattened struct from a
+ * captured `POST /api/v2/listings/fulfillment_data` response and then reshaped
+ * to the numbers these cases need.
+ *
+ * The struct is taken from the real payload rather than written out here. The
+ * hand-written version this replaces nested it under `basicOrderParameters`, a
+ * key the API does not send, which is how the preflight came to be inert in
+ * production with a green suite (opensea-sdk#1997).
+ *
+ * basicOrderType 8 is route 2, ERC20_TO_ERC721: the fulfiller pays with ERC20.
+ */
+const CAPTURED_BASIC_ORDER = (
+  preflightInput(payloadNamed("basic-order-erc20").fixture) as {
+    parameters: Record<string, unknown>
+  }
+).parameters
+
 function basicOrderInput(overrides: Record<string, unknown> = {}) {
   return {
-    basicOrderParameters: {
+    parameters: {
+      ...CAPTURED_BASIC_ORDER,
       considerationToken: USDG,
-      considerationIdentifier: "0",
       considerationAmount: "360000000",
       offerer: SELLER,
       offerToken: NFT,
       offerIdentifier: "1",
-      offerAmount: "1",
       basicOrderType: 8,
       offererConduitKey: CONDUIT_KEY,
       fulfillerConduitKey: CONDUIT_KEY,
       totalOriginalAdditionalRecipients: "1",
       additionalRecipients: [{ amount: "9000000", recipient: FEE_RECIPIENT }],
-      signature: "0x",
       ...overrides,
     },
   }
@@ -166,6 +188,58 @@ describe("getErc20Payment: advanced and standard orders", () => {
     expect(getErc20Payment({ orders: [] })).toBe(null)
     expect(getErc20Payment(undefined)).toBe(null)
     expect(getErc20Payment("nonsense")).toBe(null)
+  })
+})
+
+describe("getErc20Payment: partial fills", () => {
+  const items = [erc20Item(USDG, "80"), erc20Item(USDG, "20", FEE_RECIPIENT)]
+
+  test("returns null for a partial fill rather than the full-order sum", () => {
+    // A 1/4 fill of 80 + 20 really costs 25. Demanding the full 100 would
+    // block a buyer who can afford the fill, so the preflight must skip.
+    expect(
+      getErc20Payment(
+        advancedOrderInput(items, { numerator: 1, denominator: 4 }),
+      ),
+    ).toBe(null)
+  })
+
+  test("treats an equal positive fraction as a full fill", () => {
+    expect(
+      getErc20Payment(
+        advancedOrderInput(items, { numerator: 2, denominator: 2 }),
+      ),
+    ).toEqual({ token: USDG, amount: 100n })
+  })
+
+  test("returns null for a missing, unparsable, or zero fraction", () => {
+    const missingNumerator = advancedOrderInput(items)
+    delete (missingNumerator.advancedOrder as Record<string, unknown>).numerator
+    expect(getErc20Payment(missingNumerator)).toBe(null)
+
+    const missingDenominator = advancedOrderInput(items)
+    delete (missingDenominator.advancedOrder as Record<string, unknown>)
+      .denominator
+    expect(getErc20Payment(missingDenominator)).toBe(null)
+
+    expect(
+      getErc20Payment(advancedOrderInput(items, { numerator: "nope" })),
+    ).toBe(null)
+    expect(getErc20Payment(advancedOrderInput(items, { numerator: 0 }))).toBe(
+      null,
+    )
+    expect(getErc20Payment(advancedOrderInput(items, { denominator: 0 }))).toBe(
+      null,
+    )
+  })
+
+  test("leaves a non-advanced order shape unaffected by the fraction check", () => {
+    // The `order` shape carries no fraction, so it must still be summed.
+    expect(
+      getErc20Payment({
+        order: { parameters: { offerer: SELLER, consideration: items } },
+      }),
+    ).toEqual({ token: USDG, amount: 100n })
   })
 })
 

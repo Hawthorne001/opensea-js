@@ -34,6 +34,7 @@ type ConsiderationItemLike = {
   itemType?: unknown
   token?: unknown
   startAmount?: unknown
+  endAmount?: unknown
 }
 
 /**
@@ -101,6 +102,13 @@ function sumErc20Consideration(consideration: unknown): Erc20Payment | null {
     if (amount === null) {
       return null
     }
+    // A time-interpolated item (declining or ascending price) is charged at a
+    // value between startAmount and endAmount, so startAmount is only an upper
+    // bound and there is no confident figure to check a balance against.
+    const endAmount = toBigInt(rawItem.endAmount)
+    if (endAmount === null || endAmount !== amount) {
+      return null
+    }
     total += amount
   }
 
@@ -158,6 +166,54 @@ function basicOrderErc20Payment(
 }
 
 /**
+ * Top-level `input_data` keys that can carry the flattened basic-order struct,
+ * in precedence order.
+ *
+ * `parameters` is the name the API sends, per the `FulfillBasicOrder` schema in
+ * the OpenAPI spec. `basicOrderParameters` is a tolerated alias and appears in
+ * no real response; reading only that name is what made this preflight inert in
+ * production (opensea-sdk#1997).
+ */
+const BASIC_ORDER_STRUCT_KEYS = ["parameters", "basicOrderParameters"] as const
+
+/**
+ * Find the flattened basic-order struct in a fulfillment response.
+ *
+ * `basicOrderType` is the discriminator, because only the flattened
+ * basic-order struct carries it. An `OrderComponents`-shaped `parameters` from
+ * a standard `fulfillOrder` response has `offer` and `consideration` arrays
+ * instead, so it cannot be mistaken for a basic order.
+ */
+function findBasicOrderStruct(
+  inputData: Record<string, unknown>,
+): Record<string, unknown> | null {
+  for (const key of BASIC_ORDER_STRUCT_KEYS) {
+    const candidate = inputData[key]
+    if (isRecord(candidate) && candidate.basicOrderType !== undefined) {
+      return candidate
+    }
+  }
+  return null
+}
+
+/**
+ * Whether an advanced order's numerator/denominator fraction is a full fill.
+ * A full fill is the only case where summing the consideration items'
+ * `startAmount`s is the exact payment: for a partial fill Seaport scales each
+ * item by the fraction and requires exact divisibility, which is not modelled
+ * here. Returns false for a missing, unparsable, non-positive, or unequal
+ * fraction, so the caller fails open and skips the preflight.
+ */
+function isFullFillFraction(order: Record<string, unknown>): boolean {
+  const numerator = toBigInt(order.numerator)
+  const denominator = toBigInt(order.denominator)
+  if (numerator === null || denominator === null) {
+    return false
+  }
+  return numerator > 0n && numerator === denominator
+}
+
+/**
  * Read the ERC20 payment a fulfiller owes from the `inputData` of an OpenSea
  * fulfillment response.
  *
@@ -171,8 +227,9 @@ export function getErc20Payment(inputData: unknown): Erc20Payment | null {
     return null
   }
 
-  if ("basicOrderParameters" in inputData) {
-    return basicOrderErc20Payment(inputData.basicOrderParameters)
+  const basicOrder = findBasicOrderStruct(inputData)
+  if (basicOrder) {
+    return basicOrderErc20Payment(basicOrder)
   }
 
   const order = isRecord(inputData.advancedOrder)
@@ -181,6 +238,14 @@ export function getErc20Payment(inputData: unknown): Erc20Payment | null {
       ? inputData.order
       : null
   if (!order || !isRecord(order.parameters)) {
+    return null
+  }
+
+  // An AdvancedOrder may carry a numerator/denominator fraction for a partial
+  // fill. Seaport applies that fraction to each consideration item, so the
+  // summed full-order consideration is only the real payment for a full fill.
+  // For anything else, fail open rather than falsely blocking a purchase.
+  if (isRecord(inputData.advancedOrder) && !isFullFillFraction(order)) {
     return null
   }
 
@@ -200,8 +265,13 @@ export function getFulfillerConduitKey(inputData: unknown): string | null {
   if (typeof direct === "string") {
     return direct
   }
-  if (isRecord(inputData.basicOrderParameters)) {
-    const fromBasicOrder = inputData.basicOrderParameters.fulfillerConduitKey
+  // A basic order carries its conduit key inside the struct, not at the top
+  // level. Reading the amount without this would resolve the spender to Seaport
+  // for an order the buyer approved the conduit for, and the preflight would
+  // then report a working purchase as unapproved.
+  const basicOrder = findBasicOrderStruct(inputData)
+  if (basicOrder) {
+    const fromBasicOrder = basicOrder.fulfillerConduitKey
     if (typeof fromBasicOrder === "string") {
       return fromBasicOrder
     }

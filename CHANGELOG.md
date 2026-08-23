@@ -1,5 +1,41 @@
 # @opensea/sdk
 
+## 12.0.1
+
+### Patch Changes
+
+- bbbbfea: Pin the wire shape of the agent handshake bodies.
+
+  `proposeAgentRelationship` and `confirmAgentRelationship` take camelCase, like every other default-path write, and `Fetcher.request` converts to the snake_case the API requires. That was already the behavior, but nothing tested it end to end: the existing specs stub the fetcher, so they show the body being handed straight to `request` and never show the conversion. Reading the method alone, a caller can reasonably conclude they must supply `{counterparty_address, caller_role}` themselves, and the API answers a camelCase body with 400 "Missing required field 'counterparty_address'", which does not name the real problem.
+
+  The new test drives the real fetcher and asserts the exact bytes. No behavior change.
+
+- 34d3a50: `cancelOrders` no longer rejects a batch whose orders name the same Seaport protocol address in different letter cases. The addresses were grouped in a `Set` keyed on the raw string, so one protocol counted as several. Thanks to @Mabolla (ProjectOpenSea/opensea-sdk#1999).
+- 34d3a50: Providers: infer the EIP-712 primary type as the root of the type graph instead of taking the first key in `types`. Both the viem adapter and the seaport bridge signed the wrong struct when a dependency was declared before the root, and neither refused an ambiguous or circular type set. Both now share one helper and throw rather than guess, matching what ethers does with the same input. Thanks to @Mabolla (ProjectOpenSea/opensea-sdk#1998, #2000).
+- 3cc8640: The wire-shape guard added in #646 observes which `input_data` keys the ERC20
+  preflight reads by handing it a recording Proxy. That Proxy only had a `get`
+  trap, so a refactor to `Object.keys(inputData)` or an `in` test would have
+  reached a key without the guard seeing it. It now traps `ownKeys` and `has` too.
+
+  Tests only, no behaviour change.
+
+- ea967e2: The ERC20 fulfillment preflight is now tested against captured
+  `POST /api/v2/listings/fulfillment_data` responses rather than a hand-written
+  guess at their shape. Four response bodies are committed verbatim, covering both
+  call shapes a single-listing fulfillment can return and both an ERC20-priced and
+  a native-priced form of each, and the expected payment total comes from the
+  listing price a separate endpoint reports.
+
+  A new `erc20FulfillmentWireShape` suite checks every top-level `input_data` key
+  the preflight reads against the `input_data` variants declared in the OpenAPI
+  spec, so a name the API does not send has to be justified as a deliberate alias
+  instead of silently disabling the guard, which is what shipped in #638.
+
+  No behaviour change and no change to the public API. The keys the check inspects
+  are observed at runtime through a recording Proxy rather than read out of the
+  source text, so a rename or an extracted helper cannot quietly narrow what gets
+  checked.
+
 ## 12.0.0
 
 ### Major Changes

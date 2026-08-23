@@ -288,6 +288,65 @@ describe("SDK: cancelOrders", () => {
     expect(requireAccountIsAvailable).not.toHaveBeenCalled()
   })
 
+  test("Should accept the same protocol address in different letter cases", async () => {
+    // Orders arrive from different sources and are not consistently cased. A
+    // Set keyed on the raw string counted one protocol as two and rejected a
+    // batch that was fine.
+    const requireAccountIsAvailable = vi.fn().mockResolvedValue(undefined)
+    const cancellationManager = new CancellationManager(
+      createMockContext({
+        requireAccountIsAvailable,
+      }),
+    )
+    const mockOrder = (protocolAddress: string): OrderV2 =>
+      ({
+        orderHash: "0x123",
+        chain: "ethereum",
+        type: "basic",
+        price: {
+          current: {
+            currency: "0x0000000000000000000000000000000000000000",
+            decimals: 18,
+            value: "1000000000000000000",
+          },
+        },
+        protocolAddress,
+        protocolData: {
+          parameters: {
+            offerer: "0x0000000000000000000000000000000000000001",
+            zone: "0x0000000000000000000000000000000000000000",
+            offer: [],
+            consideration: [],
+            orderType: 0,
+            startTime: "0",
+            endTime: "0",
+            zoneHash:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+            salt: "0",
+            conduitKey:
+              "0x0000000000000000000000000000000000000000000000000000000000000000",
+            totalOriginalConsiderationItems: 0,
+            counter: 0,
+          },
+          signature: "0x",
+        },
+      }) as unknown as OrderV2
+
+    await expect(
+      cancellationManager.cancelOrders({
+        orders: [
+          mockOrder(CROSS_CHAIN_SEAPORT_V1_6_ADDRESS.toLowerCase()),
+          mockOrder(
+            CROSS_CHAIN_SEAPORT_V1_6_ADDRESS.toUpperCase().replace("0X", "0x"),
+          ),
+        ],
+        accountAddress,
+      }),
+    ).rejects.not.toThrow(/must share the same protocolAddress/)
+    // It got past the protocol grouping, which is what this pins.
+    expect(requireAccountIsAvailable).toHaveBeenCalled()
+  })
+
   test("Should reject mixed protocol order hashes before account availability check", async () => {
     const requireAccountIsAvailable = vi
       .fn()

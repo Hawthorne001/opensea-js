@@ -1,0 +1,129 @@
+{
+  "_capture": {
+    "description": "A USDC-priced Polygon listing. basicOrderType 8 is route 2, ERC20_TO_ERC721.",
+    "collection": "courtyard-nft",
+    "chain": "polygon",
+    "order_hash": "0xf34bf50f15369ae8b62caf5c03c41b70573291b46d04276489f5f1900a176409",
+    "captured": "2026-08-22",
+    "request": {
+      "method": "POST",
+      "path": "/api/v2/listings/fulfillment_data",
+      "body": {
+        "listing": {
+          "hash": "0xf34bf50f15369ae8b62caf5c03c41b70573291b46d04276489f5f1900a176409",
+          "chain": "polygon",
+          "protocol_address": "0x0000000000000068f116a894984e2db1123eb395"
+        },
+        "fulfiller": {
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+        }
+      }
+    },
+    "fulfiller_note": "vitalik.eth, a public address. The endpoint rejected every placeholder address tried (0x...0001, the OpenSea conduit, a token contract) with 'Account can not perform trading operations', so a real one was needed. It appears in the response only as advancedOrder.extraData and input_data.recipient, neither of which the ERC20 preflight reads.",
+    "listing_price": {
+      "current": {
+        "currency": "USDC",
+        "decimals": 6,
+        "value": "8000000"
+      }
+    },
+    "listing_price_source": "GET /api/v2/orders/chain/polygon/protocol/0x0000000000000068f116a894984e2db1123eb395/0xf34bf50f15369ae8b62caf5c03c41b70573291b46d04276489f5f1900a176409 -> price.current",
+    "response_note": "`response` below is the response body verbatim. Do not hand-edit it: a fixture that disagrees with the wire is what made the preflight inert in the first place (opensea-sdk#1997)."
+  },
+  "response": {
+    "protocol": "seaport1.6",
+    "fulfillment_data": {
+      "transaction": {
+        "function": "fulfillBasicOrder_efficient_6GL6yc((address,uint256,uint256,address,address,address,uint256,uint256,uint8,uint256,uint256,bytes32,uint256,bytes32,bytes32,uint256,(uint256,address)[],bytes))",
+        "chain": 137,
+        "to": "0x0000000000000068f116a894984e2db1123eb395",
+        "value": "0",
+        "value_hex": "0x0",
+        "input_data": {
+          "parameters": {
+            "considerationToken": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+            "considerationIdentifier": "0",
+            "considerationAmount": "7440000",
+            "offerer": "0xad24097ae76cf298e46b06b67cbdc3616c7df54a",
+            "zone": "0x0000000000000000000000000000000000000000",
+            "offerToken": "0x251be3a17af4892035c37ebf5890f4a4d889dcad",
+            "offerIdentifier": "104349688894624090032629514634434255094888735906508562432665933950149281422813",
+            "offerAmount": "1",
+            "basicOrderType": 8,
+            "startTime": "1787249248",
+            "endTime": "1789841248",
+            "zoneHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "salt": "27855337018906766782546881864045825683096516384821792734243705039648800004314",
+            "offererConduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+            "fulfillerConduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+            "totalOriginalAdditionalRecipients": "2",
+            "additionalRecipients": [
+              {
+                "amount": "80000",
+                "recipient": "0x0000a26b00c1f0df003000390027140000faa719"
+              },
+              {
+                "amount": "480000",
+                "recipient": "0x732134d7f99b90c704d736b360db45425073380f"
+              }
+            ],
+            "signature": "0x0d7e5040a21a58da7e8a52a4c4ea8d22ed264f1619d8c091134b9954d916f69c27b9b7459f41ef70aa910b87e86b836f82ee986246b3503a6c57df2579db72c31b"
+          }
+        },
+        "calldata_suffix": "0xcdb44011"
+      },
+      "orders": [
+        {
+          "parameters": {
+            "offerer": "0xad24097ae76cf298e46b06b67cbdc3616c7df54a",
+            "offer": [
+              {
+                "itemType": 2,
+                "token": "0x251be3a17af4892035c37ebf5890f4a4d889dcad",
+                "identifierOrCriteria": "104349688894624090032629514634434255094888735906508562432665933950149281422813",
+                "startAmount": "1",
+                "endAmount": "1"
+              }
+            ],
+            "consideration": [
+              {
+                "itemType": 1,
+                "token": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "identifierOrCriteria": "0",
+                "startAmount": "7440000",
+                "endAmount": "7440000",
+                "recipient": "0xad24097ae76cf298e46b06b67cbdc3616c7df54a"
+              },
+              {
+                "itemType": 1,
+                "token": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "identifierOrCriteria": "0",
+                "startAmount": "80000",
+                "endAmount": "80000",
+                "recipient": "0x0000a26b00c1f0df003000390027140000faa719"
+              },
+              {
+                "itemType": 1,
+                "token": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174",
+                "identifierOrCriteria": "0",
+                "startAmount": "480000",
+                "endAmount": "480000",
+                "recipient": "0x732134d7f99b90c704d736b360db45425073380f"
+              }
+            ],
+            "startTime": "1787249248",
+            "endTime": "1789841248",
+            "orderType": 0,
+            "zone": "0x0000000000000000000000000000000000000000",
+            "zoneHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "salt": "0x3d958fe2000000000000000000000000000000000000000088336b358df658da",
+            "conduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+            "totalOriginalConsiderationItems": 3,
+            "counter": "0"
+          },
+          "signature": "0x0d7e5040a21a58da7e8a52a4c4ea8d22ed264f1619d8c091134b9954d916f69c27b9b7459f41ef70aa910b87e86b836f82ee986246b3503a6c57df2579db72c31b"
+        }
+      ]
+    }
+  }
+}

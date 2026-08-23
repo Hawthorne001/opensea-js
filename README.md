@@ -11,6 +11,10 @@
 
 # @opensea/sdk <!-- omit in toc -->
 
+> **Read-only mirror.** This package is developed in a private monorepo and mirrored to [ProjectOpenSea/opensea-sdk](https://github.com/ProjectOpenSea/opensea-sdk) when a version is released, so the public code can trail the internal main branch by weeks.
+>
+> Pull requests opened on the mirror cannot be merged there. They are read, and a fix worth taking is recreated in the monorepo. Because a fix that has landed internally is not public until the next release, filing an issue before writing a patch is the quickest way to find out whether a bug is already fixed.
+
 This is the TypeScript SDK for [OpenSea](https://opensea.io), the largest marketplace for NFTs and tokens.
 
 It allows developers to access the official orderbook, filter it, create listings and offers, complete trades programmatically, and swap tokens across chains.

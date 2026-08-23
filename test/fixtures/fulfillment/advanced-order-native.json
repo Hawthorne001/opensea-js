@@ -1,0 +1,171 @@
+{
+  "_capture": {
+    "description": "An ETH-priced Ethereum listing behind a signed zone.",
+    "collection": "late-stage-archetypes",
+    "chain": "ethereum",
+    "order_hash": "0xe8fbdfc8d23347ec1eb46887b7fbc5b7e282d9d337cb82f7ed47fe9ba3fdb319",
+    "captured": "2026-08-22",
+    "request": {
+      "method": "POST",
+      "path": "/api/v2/listings/fulfillment_data",
+      "body": {
+        "listing": {
+          "hash": "0xe8fbdfc8d23347ec1eb46887b7fbc5b7e282d9d337cb82f7ed47fe9ba3fdb319",
+          "chain": "ethereum",
+          "protocol_address": "0x0000000000000068f116a894984e2db1123eb395"
+        },
+        "fulfiller": {
+          "address": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+        }
+      }
+    },
+    "fulfiller_note": "vitalik.eth, a public address. The endpoint rejected every placeholder address tried (0x...0001, the OpenSea conduit, a token contract) with 'Account can not perform trading operations', so a real one was needed. It appears in the response only as advancedOrder.extraData and input_data.recipient, neither of which the ERC20 preflight reads.",
+    "listing_price": {
+      "current": {
+        "currency": "ETH",
+        "decimals": 18,
+        "value": "37600000000000000"
+      }
+    },
+    "listing_price_source": "GET /api/v2/orders/chain/ethereum/protocol/0x0000000000000068f116a894984e2db1123eb395/0xe8fbdfc8d23347ec1eb46887b7fbc5b7e282d9d337cb82f7ed47fe9ba3fdb319 -> price.current",
+    "response_note": "`response` below is the response body verbatim. Do not hand-edit it: a fixture that disagrees with the wire is what made the preflight inert in the first place (opensea-sdk#1997)."
+  },
+  "response": {
+    "protocol": "seaport1.6",
+    "fulfillment_data": {
+      "transaction": {
+        "function": "fulfillAdvancedOrder(((address,address,(uint8,address,uint256,uint256,uint256)[],(uint8,address,uint256,uint256,uint256,address)[],uint8,uint256,uint256,bytes32,uint256,bytes32,uint256),uint120,uint120,bytes,bytes),(uint256,uint8,uint256,uint256,bytes32[])[],bytes32,address)",
+        "chain": 1,
+        "to": "0x0000000000000068f116a894984e2db1123eb395",
+        "value": "37600000000000000",
+        "value_hex": "0x859500338e0000",
+        "input_data": {
+          "advancedOrder": {
+            "parameters": {
+              "offerer": "0xe12d767712c023190717b1f81a9ec8cbaa488c25",
+              "zone": "0x000056f7000000ece9003ca63978907a00ffd100",
+              "offer": [
+                {
+                  "itemType": 2,
+                  "token": "0xcc91e1e9b8ecdcd01f980b9a76490668bca3c7b4",
+                  "identifierOrCriteria": "432",
+                  "startAmount": "1",
+                  "endAmount": "1"
+                }
+              ],
+              "consideration": [
+                {
+                  "itemType": 0,
+                  "token": "0x0000000000000000000000000000000000000000",
+                  "identifierOrCriteria": "0",
+                  "startAmount": "35344000000000000",
+                  "endAmount": "35344000000000000",
+                  "recipient": "0xe12d767712c023190717b1f81a9ec8cbaa488c25"
+                },
+                {
+                  "itemType": 0,
+                  "token": "0x0000000000000000000000000000000000000000",
+                  "identifierOrCriteria": "0",
+                  "startAmount": "376000000000000",
+                  "endAmount": "376000000000000",
+                  "recipient": "0x0000a26b00c1f0df003000390027140000faa719"
+                },
+                {
+                  "itemType": 0,
+                  "token": "0x0000000000000000000000000000000000000000",
+                  "identifierOrCriteria": "0",
+                  "startAmount": "1504000000000000",
+                  "endAmount": "1504000000000000",
+                  "recipient": "0xf7efe5fdaa7030ee8ed482ba755b664c32220d00"
+                },
+                {
+                  "itemType": 0,
+                  "token": "0x0000000000000000000000000000000000000000",
+                  "identifierOrCriteria": "0",
+                  "startAmount": "376000000000000",
+                  "endAmount": "376000000000000",
+                  "recipient": "0x5f3aeb9e72d08427e1f69069f65b47856120b604"
+                }
+              ],
+              "orderType": 2,
+              "startTime": "1787429407",
+              "endTime": "1795205407",
+              "zoneHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+              "salt": "27855337018906766782546881864045825683096516384821792734247520197556567976081",
+              "conduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+              "totalOriginalConsiderationItems": "4"
+            },
+            "numerator": 1,
+            "denominator": 1,
+            "signature": "0x53ee353eb441aef2af270295f5ac735b9c871336b9496037512f0243705b46074141eeb7a84f0bee2746702905796be46d27027058a7d95f52a6ac1a8dc5745f1c",
+            "extraData": "0x00d8da6bf26964af9d7eed9e03e53415d37aa96045000000006a8a0a82e793acb356512d7b6c27ee3c674b92df664e1cd475e6598ee059d81e179931d4a9949b38090bae0a733fdf55b898e04632465f890cae7946e2e39d6fb64e5e15080000000000000000000000000000000000000000000000000000000000000000721c008fdff27bf06e7e123956e2fe03b63342e3"
+          },
+          "criteriaResolvers": [],
+          "fulfillerConduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+          "recipient": "0xd8da6bf26964af9d7eed9e03e53415d37aa96045"
+        },
+        "calldata_suffix": "0xcdb44011"
+      },
+      "orders": [
+        {
+          "parameters": {
+            "offerer": "0xe12d767712c023190717b1f81a9ec8cbaa488c25",
+            "offer": [
+              {
+                "itemType": 2,
+                "token": "0xcc91e1e9b8ecdcd01f980b9a76490668bca3c7b4",
+                "identifierOrCriteria": "432",
+                "startAmount": "1",
+                "endAmount": "1"
+              }
+            ],
+            "consideration": [
+              {
+                "itemType": 0,
+                "token": "0x0000000000000000000000000000000000000000",
+                "identifierOrCriteria": "0",
+                "startAmount": "35344000000000000",
+                "endAmount": "35344000000000000",
+                "recipient": "0xe12d767712c023190717b1f81a9ec8cbaa488c25"
+              },
+              {
+                "itemType": 0,
+                "token": "0x0000000000000000000000000000000000000000",
+                "identifierOrCriteria": "0",
+                "startAmount": "376000000000000",
+                "endAmount": "376000000000000",
+                "recipient": "0x0000a26b00c1f0df003000390027140000faa719"
+              },
+              {
+                "itemType": 0,
+                "token": "0x0000000000000000000000000000000000000000",
+                "identifierOrCriteria": "0",
+                "startAmount": "1504000000000000",
+                "endAmount": "1504000000000000",
+                "recipient": "0xf7efe5fdaa7030ee8ed482ba755b664c32220d00"
+              },
+              {
+                "itemType": 0,
+                "token": "0x0000000000000000000000000000000000000000",
+                "identifierOrCriteria": "0",
+                "startAmount": "376000000000000",
+                "endAmount": "376000000000000",
+                "recipient": "0x5f3aeb9e72d08427e1f69069f65b47856120b604"
+              }
+            ],
+            "startTime": "1787429407",
+            "endTime": "1795205407",
+            "orderType": 2,
+            "zone": "0x000056f7000000ece9003ca63978907a00ffd100",
+            "zoneHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "salt": "0x3d958fe20000000000000000000000000000000000000000bd25951cdc7ea891",
+            "conduitKey": "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000",
+            "totalOriginalConsiderationItems": 4,
+            "counter": "0"
+          },
+          "signature": "0x53ee353eb441aef2af270295f5ac735b9c871336b9496037512f0243705b46074141eeb7a84f0bee2746702905796be46d27027058a7d95f52a6ac1a8dc5745f1c"
+        }
+      ]
+    }
+  }
+}

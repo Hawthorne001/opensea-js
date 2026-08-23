@@ -10,6 +10,7 @@ import {
   encodeFunctionData as viemEncodeFunctionData,
   type WalletClient,
 } from "viem"
+import { inferPrimaryType } from "../utils/eip712"
 import type {
   ContractCaller,
   OpenSeaProvider,
@@ -89,15 +90,13 @@ function createViemSigner(
       }
       return walletClient.signTypedData({
         domain: {
-          chainId: Number(domain.chainId),
+          chainId: domain.chainId != null ? Number(domain.chainId) : undefined,
           name: domain.name,
           version: domain.version,
           verifyingContract: domain.verifyingContract as `0x${string}`,
         },
         types,
-        primaryType:
-          Object.keys(types).find(key => key !== "EIP712Domain") ||
-          Object.keys(types)[0],
+        primaryType: inferPrimaryType(types),
         message: value,
         account: walletClient.account,
       })

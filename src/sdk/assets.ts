@@ -416,6 +416,15 @@ export class AssetsManager {
             callData,
           })
         } else if (asset.tokenStandard === TokenStandard.ERC20) {
+          // One approval per contract, same as the ERC721/ERC1155 branch above.
+          // The amount is always max uint256, so a second entry for the same
+          // token would send an identical, wasted approval.
+          const contractAddress = asset.tokenAddress.toLowerCase()
+          if (processedContracts.has(contractAddress)) {
+            continue
+          }
+          processedContracts.add(contractAddress)
+
           // approve(spender, amount) - use max uint256 for unlimited
           const callData = cc.encodeFunctionData({
             abi: APPROVE_ABI,
