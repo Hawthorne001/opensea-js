@@ -22,9 +22,10 @@ describe("SDK: getOrderByHash", () => {
     const offer = offersResponse.offers[0]
     const orderHash = offer.orderHash
     const protocolAddress = offer.protocolAddress!
+    expect(orderHash, "EVM offers should have an order hash").toBeTruthy()
 
     // Now fetch the same order by hash
-    const response = await sdk.api.getOrderByHash(orderHash, protocolAddress)
+    const response = await sdk.api.getOrderByHash(orderHash!, protocolAddress)
 
     expect(response, "Response should not be null").toBeTruthy()
     expect(response.orderHash).toBe(orderHash)
@@ -53,9 +54,10 @@ describe("SDK: getOrderByHash", () => {
     const listing = listingsResponse.listings[0]
     const orderHash = listing.orderHash
     const protocolAddress = listing.protocolAddress!
+    expect(orderHash, "EVM listings should have an order hash").toBeTruthy()
 
     // Now fetch the same order by hash
-    const response = await sdk.api.getOrderByHash(orderHash, protocolAddress)
+    const response = await sdk.api.getOrderByHash(orderHash!, protocolAddress)
 
     expect(response).toBeTruthy()
     expect(response.orderHash).toBe(orderHash)
@@ -78,10 +80,11 @@ describe("SDK: getOrderByHash", () => {
     expect(offersResponse.offers.length).toBeGreaterThan(0)
 
     const offer = offersResponse.offers[0]
+    expect(offer.orderHash, "EVM offers should have an order hash").toBeTruthy()
 
     // Fetch by hash
     const response = await sdk.api.getOrderByHash(
-      offer.orderHash,
+      offer.orderHash!,
       offer.protocolAddress!,
     )
 

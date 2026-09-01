@@ -118,6 +118,26 @@ export const getCancelOrderPath = (
   return `${API_V2_PREFIX}/orders/chain/${chain}/protocol/${protocolAddress}/${orderHash}/cancel`
 }
 
+export const getCreateCancelOrderActionsPath = (
+  chain: Chain,
+  protocolAddress: string,
+  orderIdentifier: string,
+) => {
+  return `${API_V2_PREFIX}/orders/chain/${chain}/protocol/${protocolAddress}/${orderIdentifier}/cancel/actions`
+}
+
+export const getCreateListingFulfillmentActionsPath = () => {
+  return `${API_V2_PREFIX}/listings/fulfillment/actions`
+}
+
+export const getCreateOfferActionsPath = () => {
+  return `${API_V2_PREFIX}/offers/actions`
+}
+
+export const getCreateOfferFulfillmentActionsPath = () => {
+  return `${API_V2_PREFIX}/offers/fulfillment/actions`
+}
+
 export const getTraitOffersPath = (collectionSlug: string) => {
   return `${API_V2_PREFIX}/offers/collection/${collectionSlug}/traits`
 }

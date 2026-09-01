@@ -9,6 +9,8 @@ import {
   getBestOfferAPIPath,
   getBuildOfferPath,
   getCollectionOffersPath,
+  getCreateOfferActionsPath,
+  getCreateOfferFulfillmentActionsPath,
   getOffersByNFTPath,
   getPostCollectionOfferPath,
   getTraitOffersPath,
@@ -17,6 +19,10 @@ import type { Fetcher } from "./fetcher"
 import type {
   BuildOfferResponse,
   CollectionOffer,
+  CreateOfferActionsRequest,
+  CreateOfferActionsResponse,
+  CreateOfferFulfillmentActionsRequest,
+  CreateOfferFulfillmentActionsResponse,
   GetBestOfferResponse,
   GetOffersResponse,
 } from "./types"
@@ -236,6 +242,30 @@ export class OffersAPI {
     return this.fetcher.get<GetOffersResponse>(
       getOffersByNFTPath(collectionSlug, identifier),
       { limit, next },
+    )
+  }
+
+  /**
+   * Get the ordered actions required to create an offer.
+   */
+  async createOfferActions(
+    request: CreateOfferActionsRequest,
+  ): Promise<CreateOfferActionsResponse> {
+    return this.fetcher.post<CreateOfferActionsResponse>(
+      getCreateOfferActionsPath(),
+      request,
+    )
+  }
+
+  /**
+   * Get the ordered actions required to fulfill an offer.
+   */
+  async createOfferFulfillmentActions(
+    request: CreateOfferFulfillmentActionsRequest,
+  ): Promise<CreateOfferFulfillmentActionsResponse> {
+    return this.fetcher.post<CreateOfferFulfillmentActionsResponse>(
+      getCreateOfferFulfillmentActionsPath(),
+      request,
     )
   }
 }

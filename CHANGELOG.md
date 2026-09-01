@@ -1,5 +1,36 @@
 # @opensea/sdk
 
+## 12.1.0
+
+### Minor Changes
+
+- b68b01e: Add typed order-action APIs for creating offers, fulfilling listings and offers, and cancelling orders across EVM chains and Solana.
+
+## 12.0.2
+
+### Patch Changes
+
+- b2b07f2: Cancel the rate-limit retry delay when the caller's `AbortSignal` fires
+
+  `RequestOptions.signal` reached each fetch attempt but not the wait between
+  them, so aborting during a 429/599 backoff left the promise pending for the
+  full `Retry-After` (capped at five minutes) and then started another attempt.
+  `get` and `request` now pass the signal into the retry layer, which rejects
+  with the existing `Request aborted` error and does not retry.
+
+- b2b07f2: Preserve signed multipart field names in wallet-auth upload contexts
+
+  The four helpers that return an `UploadContext` (`createProfileImageUpload`,
+  `createCollectionImageUpload`, `createDropAllowlistUpload`,
+  `createDropItemMediaUpload`) no longer camelize their response. `fields` is an
+  opaque signed field map that the caller must submit unchanged, so a legitimate
+  S3 policy field such as `success_action_status` was being returned as
+  `successActionStatus` and the resulting form no longer matched the signed
+  policy.
+
+- Updated dependencies [ed91bb6]
+  - @opensea/api-types@0.8.11
+
 ## 12.0.1
 
 ### Patch Changes

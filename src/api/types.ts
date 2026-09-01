@@ -1168,12 +1168,16 @@ import type {
   BatchCollectionsRequest as ApiBatchCollectionsRequest,
   BatchNftsRequest as ApiBatchNftsRequest,
   BatchTokensRequest as ApiBatchTokensRequest,
+  CancelOrderActionsRequest as ApiCancelOrderActionsRequest,
+  CancelOrderActionsResponse as ApiCancelOrderActionsResponse,
   ClosedPositionsResponse as ApiClosedPositionsResponse,
   CollectionBatchResponse as ApiCollectionBatchResponse,
   CollectionHoldersPaginatedResponse as ApiCollectionHoldersPaginatedResponse,
   CollectionOfferAggregatesPaginatedResponse as ApiCollectionOfferAggregatesPaginatedResponse,
   CreateListingActionsRequest as ApiCreateListingActionsRequest,
   CreateListingActionsResponse as ApiCreateListingActionsResponse,
+  CreateOfferActionsRequest as ApiCreateOfferActionsRequest,
+  CreateOfferActionsResponse as ApiCreateOfferActionsResponse,
   CrossChainDropMintRequest as ApiCrossChainDropMintRequest,
   CrossChainDropMintResponse as ApiCrossChainDropMintResponse,
   CrossChainFulfillmentRequest as ApiCrossChainFulfillmentRequest,
@@ -1184,6 +1188,9 @@ import type {
   DropDeployResponse as ApiDropDeployResponse,
   FloorPriceHistoryResponse as ApiFloorPriceHistoryResponse,
   FulfillerObject as ApiFulfillerObject,
+  FulfillmentActionsResponse as ApiFulfillmentActionsResponse,
+  FullfillListingRequest as ApiFullfillListingRequest,
+  FullfillmentDataRequest as ApiFullfillmentDataRequest,
   ListingObject as ApiListingObject,
   NftAnalyticsResponse as ApiNftAnalyticsResponse,
   NftBatchResponse as ApiNftBatchResponse,
@@ -1211,8 +1218,15 @@ import type {
 export type BatchCollectionsRequest = Camelize<ApiBatchCollectionsRequest>
 export type BatchNftsRequest = Camelize<ApiBatchNftsRequest>
 export type BatchTokensRequest = Camelize<ApiBatchTokensRequest>
+export type CreateCancelOrderActionsRequest =
+  Camelize<ApiCancelOrderActionsRequest>
 export type CreateListingActionsRequest =
   Camelize<ApiCreateListingActionsRequest>
+export type CreateListingFulfillmentActionsRequest =
+  Camelize<ApiFullfillListingRequest>
+export type CreateOfferActionsRequest = Camelize<ApiCreateOfferActionsRequest>
+export type CreateOfferFulfillmentActionsRequest =
+  Camelize<ApiFullfillmentDataRequest>
 export type CrossChainDropMintRequest = Camelize<ApiCrossChainDropMintRequest>
 export type CrossChainFulfillmentRequest =
   Camelize<ApiCrossChainFulfillmentRequest>
@@ -1227,8 +1241,15 @@ export type CollectionHoldersPaginatedResponse =
   Camelize<ApiCollectionHoldersPaginatedResponse>
 export type CollectionOfferAggregatesPaginatedResponse =
   Camelize<ApiCollectionOfferAggregatesPaginatedResponse>
+export type CreateCancelOrderActionsResponse =
+  Camelize<ApiCancelOrderActionsResponse>
 export type CreateListingActionsResponse =
   Camelize<ApiCreateListingActionsResponse>
+export type CreateListingFulfillmentActionsResponse =
+  Camelize<ApiFulfillmentActionsResponse>
+export type CreateOfferActionsResponse = Camelize<ApiCreateOfferActionsResponse>
+export type CreateOfferFulfillmentActionsResponse =
+  Camelize<ApiFulfillmentActionsResponse>
 export type CrossChainDropMintResponse = Camelize<ApiCrossChainDropMintResponse>
 export type CrossChainFulfillmentResponse =
   Camelize<ApiCrossChainFulfillmentResponse>

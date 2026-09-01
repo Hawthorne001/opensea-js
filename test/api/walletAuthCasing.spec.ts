@@ -37,6 +37,17 @@ const KNOWN_CAMELCASE_OPERATIONS = [
   "upload_profile_image",
 ].sort()
 
+const HTTP_METHODS = new Set([
+  "delete",
+  "get",
+  "head",
+  "options",
+  "patch",
+  "post",
+  "put",
+  "trace",
+])
+
 function camelCaseRequestOperations(): string[] {
   const spec = readOpenApiSpec()
   const schemas = spec.components.schemas as Record<
@@ -60,7 +71,8 @@ function camelCaseRequestOperations(): string[] {
 
   const found: string[] = []
   for (const methods of Object.values(spec.paths)) {
-    for (const operation of Object.values(methods)) {
+    for (const [method, operation] of Object.entries(methods)) {
+      if (!HTTP_METHODS.has(method)) continue
       const op = operation as {
         operationId?: string
         requestBody?: {
@@ -74,6 +86,27 @@ function camelCaseRequestOperations(): string[] {
     }
   }
   return [...new Set(found)].sort()
+}
+
+function operationIdsInInstalledSpec(): Set<string> {
+  const spec = readOpenApiSpec()
+  const found = new Set<string>()
+  for (const methods of Object.values(spec.paths)) {
+    for (const [method, operation] of Object.entries(methods)) {
+      if (!HTTP_METHODS.has(method)) continue
+      const operationId = (operation as { operationId?: string }).operationId
+      if (operationId) found.add(operationId)
+    }
+  }
+  return found
+}
+
+function usesLegacyCreateOfferActionItemSchema(): boolean {
+  const spec = readOpenApiSpec()
+  const request = spec.components.schemas.CreateOfferActionsRequest as {
+    properties?: { item?: { $ref?: string } }
+  }
+  return request.properties?.item?.$ref === "#/components/schemas/OfferItem"
 }
 
 describe("wallet-auth request body casing", () => {
@@ -229,6 +262,16 @@ describe("wallet-auth request body casing", () => {
     // Tripwire: this list is the set of endpoints known to need verbatim bodies.
     // A new one appearing here means the default snake_casing would corrupt it —
     // handle it explicitly, then add it to KNOWN_CAMELCASE_OPERATIONS.
-    expect(camelCaseRequestOperations()).toEqual(KNOWN_CAMELCASE_OPERATIONS)
+    // The flat public mirror may temporarily install the previously published
+    // api-types while a new spec version is being released, so compare only
+    // operations present in that installed spec.
+    const installedOperationIds = operationIdsInInstalledSpec()
+    const expectedOperations = usesLegacyCreateOfferActionItemSchema()
+      ? [...KNOWN_CAMELCASE_OPERATIONS, "create_offer_actions"]
+      : KNOWN_CAMELCASE_OPERATIONS
+    const expected = expectedOperations
+      .filter(operationId => installedOperationIds.has(operationId))
+      .sort()
+    expect(camelCaseRequestOperations()).toEqual(expected)
   })
 })

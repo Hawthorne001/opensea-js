@@ -224,6 +224,12 @@ export class WalletAuthAPI {
     )
   }
 
+  /**
+   * `UploadContext.fields` is an opaque signed multipart field map that the
+   * caller must submit unchanged, so the response is not camelized. Otherwise a
+   * legitimate field name such as S3's `success_action_status` comes back as
+   * `successActionStatus` and the form no longer matches the signed policy.
+   */
   createDropItemMediaUpload(
     slug: string,
     body: WalletAuthRequest<"upload_drop_item_media">,
@@ -232,6 +238,8 @@ export class WalletAuthAPI {
       "POST",
       `/api/v2/drops/${segment(slug)}/items/media`,
       body,
+      undefined,
+      { camelizeResponse: false },
     )
   }
 
@@ -246,10 +254,19 @@ export class WalletAuthAPI {
     )
   }
 
+  /**
+   * `UploadContext.fields` is an opaque signed multipart field map that the
+   * caller must submit unchanged, so the response is not camelized. Otherwise a
+   * legitimate field name such as S3's `success_action_status` comes back as
+   * `successActionStatus` and the form no longer matches the signed policy.
+   */
   createDropAllowlistUpload(slug: string) {
     return this.fetcher.request<OperationResponse<"upload_drop_allowlist">>(
       "POST",
       `/api/v2/drops/${segment(slug)}/allowlist`,
+      undefined,
+      undefined,
+      { camelizeResponse: false },
     )
   }
 
@@ -292,6 +309,12 @@ export class WalletAuthAPI {
     )
   }
 
+  /**
+   * `UploadContext.fields` is an opaque signed multipart field map that the
+   * caller must submit unchanged, so the response is not camelized. Otherwise a
+   * legitimate field name such as S3's `success_action_status` comes back as
+   * `successActionStatus` and the form no longer matches the signed policy.
+   */
   createCollectionImageUpload(
     slug: string,
     imageType: string,
@@ -301,6 +324,9 @@ export class WalletAuthAPI {
     return this.fetcher.request<OperationResponse<"upload_collection_image">>(
       "POST",
       `/api/v2/collections/${segment(slug)}/images/${segment(imageType)}?${query}`,
+      undefined,
+      undefined,
+      { camelizeResponse: false },
     )
   }
 
@@ -332,7 +358,8 @@ export class WalletAuthAPI {
   /**
    * `UploadProfileImageRequest` is camelCase on the wire (`imageType`,
    * `contentType`) and both are required, so snake-casing the body made this
-   * call fail validation every time. Sent verbatim.
+   * call fail validation every time. Sent verbatim. The response is not
+   * camelized either, for the `UploadContext.fields` reason above.
    */
   createProfileImageUpload(body: WalletAuthRequest<"upload_profile_image">) {
     return this.fetcher.request<OperationResponse<"upload_profile_image">>(
@@ -340,7 +367,7 @@ export class WalletAuthAPI {
       "/api/v2/profile/images",
       body,
       undefined,
-      { snakeizeBody: false },
+      { snakeizeBody: false, camelizeResponse: false },
     )
   }
 

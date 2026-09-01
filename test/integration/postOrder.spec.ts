@@ -197,9 +197,10 @@ describe("SDK: order posting", () => {
     // Cancel the order using self serve API key tied to the offerer
     expect(offerResponse).not.toBeNull()
     const { protocolAddress, orderHash } = offerResponse!
+    expect(orderHash, "EVM offers should have an order hash").toBeTruthy()
     const cancelResponse = await sdk.offchainCancelOrder(
       protocolAddress!,
-      orderHash,
+      orderHash!,
       undefined,
       undefined,
       true,
@@ -232,9 +233,10 @@ describe("SDK: order posting", () => {
     // Cancel the order using the offerer signature, deriving it from the ethers signer
     expect(offerResponse).not.toBeNull()
     const { protocolAddress, orderHash } = offerResponse!
+    expect(orderHash, "EVM offers should have an order hash").toBeTruthy()
     const cancelResponse = await sdk.offchainCancelOrder(
       protocolAddress!,
-      orderHash,
+      orderHash!,
       undefined,
       undefined,
       true,

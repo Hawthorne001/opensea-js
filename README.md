@@ -118,6 +118,29 @@ const mint = await sdk.api.buildCrossChainDropMintTransactions("pyro-on-ape", {
 const receipt = await sdk.api.getTransactionReceipt(mint.receiptRequest)
 ```
 
+### Order actions on EVM and Solana
+
+Use the typed action APIs when a wallet needs ordered approval, signing, or transaction steps. Solana callers should pass `svm_order.id` as the order identifier and preserve base58 address casing.
+
+```typescript
+const actions = await sdk.api.createListingFulfillmentActions({
+  listing: {
+    hash: "<svm_order.id>",
+    chain: "solana",
+    protocolAddress: "<protocol address from the listing>",
+  },
+  fulfiller: { address: "<buyer address>" },
+  includeOptionalCreatorFees: false,
+})
+
+// Also available:
+// sdk.api.createOfferActions(request)
+// sdk.api.createOfferFulfillmentActions(request)
+// sdk.api.createCancelOrderActions(protocol, orderIdentifier, request, chain)
+```
+
+Execute `actions.steps` in order. If a Solana action includes a partially signed transaction or requires a Jito bundle, submit it exactly as directed by the response rather than rebuilding or broadcasting it through a public RPC.
+
 ### Token activity stats
 
 Read materialized trade count and USD volume for a token without aggregating
@@ -203,6 +226,10 @@ The changelog for recent versions can be found at:
 
 - @opensea/sdk: https://github.com/ProjectOpenSea/opensea-sdk/releases
 - OpenSea API: https://docs.opensea.io/changelog
+
+## Security
+
+Found a vulnerability? Report it through OpenSea's Bugcrowd program at https://bugcrowd.com/engagements/opensea rather than opening a public issue. See [SECURITY.md](SECURITY.md).
 
 [version-badge]: https://img.shields.io/github/package-json/v/ProjectOpenSea/opensea-sdk
 [version-link]: https://github.com/ProjectOpenSea/opensea-sdk/releases

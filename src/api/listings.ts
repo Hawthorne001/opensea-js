@@ -3,6 +3,7 @@ import {
   getBestListingAPIPath,
   getBestListingsAPIPath,
   getCreateListingActionsPath,
+  getCreateListingFulfillmentActionsPath,
   getCrossChainFulfillmentDataPath,
   getSweepListingsPath,
 } from "./apiPaths"
@@ -10,6 +11,8 @@ import type { Fetcher } from "./fetcher"
 import {
   type CreateListingActionsRequest,
   type CreateListingActionsResponse,
+  type CreateListingFulfillmentActionsRequest,
+  type CreateListingFulfillmentActionsResponse,
   type CrossChainFulfillmentRequest,
   type CrossChainFulfillmentResponse,
   encodeTraitsParam,
@@ -137,6 +140,18 @@ export class ListingsAPI {
   ): Promise<CreateListingActionsResponse> {
     return this.fetcher.post<CreateListingActionsResponse>(
       getCreateListingActionsPath(),
+      request,
+    )
+  }
+
+  /**
+   * Get the ordered actions required to fulfill a listing.
+   */
+  async createListingFulfillmentActions(
+    request: CreateListingFulfillmentActionsRequest,
+  ): Promise<CreateListingFulfillmentActionsResponse> {
+    return this.fetcher.post<CreateListingFulfillmentActionsResponse>(
+      getCreateListingFulfillmentActionsPath(),
       request,
     )
   }

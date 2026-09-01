@@ -8,6 +8,7 @@ import { type Chain, OrderSide } from "../types"
 import type { Camelize } from "../utils/case"
 import {
   getCancelOrderPath,
+  getCreateCancelOrderActionsPath,
   getOrderByHashPath,
   getPostListingPath,
   getPostOfferPath,
@@ -15,6 +16,8 @@ import {
 import type { Fetcher } from "./fetcher"
 import type {
   CancelOrderResponse,
+  CreateCancelOrderActionsRequest,
+  CreateCancelOrderActionsResponse,
   GetOrderByHashResponse,
   Listing,
   Offer,
@@ -165,6 +168,21 @@ export class OrdersAPI {
       { offererSignature },
       undefined,
       { snakeizeBody: false },
+    )
+  }
+
+  /**
+   * Get the ordered actions required to cancel an order onchain.
+   */
+  async createCancelOrderActions(
+    protocolAddress: string,
+    orderIdentifier: string,
+    request: CreateCancelOrderActionsRequest,
+    chain: Chain = this.chain,
+  ): Promise<CreateCancelOrderActionsResponse> {
+    return this.fetcher.post<CreateCancelOrderActionsResponse>(
+      getCreateCancelOrderActionsPath(chain, protocolAddress, orderIdentifier),
+      request,
     )
   }
 }

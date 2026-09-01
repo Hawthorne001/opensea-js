@@ -8,7 +8,7 @@ TypeScript SDK for buying, selling, and managing NFTs and tokens on OpenSea. Sup
 cd packages/sdk
 pnpm run build
 pnpm run test
-pnpm run test:integration  # requires OPENSEA_API_KEY
+pnpm run test:integration  # needs a .env, see test/README-integration.md
 pnpm run check-types
 pnpm run lint
 ```

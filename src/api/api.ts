@@ -47,8 +47,16 @@ import {
   type CollectionOffer,
   type CollectionOfferAggregatesPaginatedResponse,
   CollectionOrderByOption,
+  type CreateCancelOrderActionsRequest,
+  type CreateCancelOrderActionsResponse,
   type CreateListingActionsRequest,
   type CreateListingActionsResponse,
+  type CreateListingFulfillmentActionsRequest,
+  type CreateListingFulfillmentActionsResponse,
+  type CreateOfferActionsRequest,
+  type CreateOfferActionsResponse,
+  type CreateOfferFulfillmentActionsRequest,
+  type CreateOfferFulfillmentActionsResponse,
   type CrossChainDropMintRequest,
   type CrossChainDropMintResponse,
   type CrossChainFulfillmentRequest,
@@ -699,6 +707,23 @@ export class OpenSeaAPI {
   }
 
   /**
+   * Get ordered actions to cancel an order onchain.
+   */
+  public async createCancelOrderActions(
+    protocolAddress: string,
+    orderIdentifier: string,
+    request: CreateCancelOrderActionsRequest,
+    chain: Chain = this.chain,
+  ): Promise<CreateCancelOrderActionsResponse> {
+    return this.ordersAPI.createCancelOrderActions(
+      protocolAddress,
+      orderIdentifier,
+      request,
+      chain,
+    )
+  }
+
+  /**
    * Gets a list of events based on query parameters.
    * @param args Query parameters for filtering events.
    * @returns The {@link GetEventsResponse} returned by the API.
@@ -1257,6 +1282,33 @@ export class OpenSeaAPI {
   }
 
   /**
+   * Get ordered actions to fulfill a listing.
+   */
+  public async createListingFulfillmentActions(
+    request: CreateListingFulfillmentActionsRequest,
+  ): Promise<CreateListingFulfillmentActionsResponse> {
+    return this.listingsAPI.createListingFulfillmentActions(request)
+  }
+
+  /**
+   * Get ordered actions to create an offer.
+   */
+  public async createOfferActions(
+    request: CreateOfferActionsRequest,
+  ): Promise<CreateOfferActionsResponse> {
+    return this.offersAPI.createOfferActions(request)
+  }
+
+  /**
+   * Get ordered actions to fulfill an offer.
+   */
+  public async createOfferFulfillmentActions(
+    request: CreateOfferFulfillmentActionsRequest,
+  ): Promise<CreateOfferFulfillmentActionsResponse> {
+    return this.offersAPI.createOfferFulfillmentActions(request)
+  }
+
+  /**
    * Build a deploy-contract transaction for a new drop.
    */
   public async deployDropContract(
@@ -1404,7 +1456,7 @@ export class OpenSeaAPI {
         const raw = await this._fetch(url, "GET", undefined, undefined, options)
         return this.camelizeResponseBody<T>(raw, options)
       },
-      { logger: this.logger },
+      { logger: this.logger, signal: options?.signal },
     )
   }
 
@@ -1449,7 +1501,7 @@ export class OpenSeaAPI {
         const raw = await this._fetch(url, method, headers, wireBody, options)
         return this.camelizeResponseBody<T>(raw, options)
       },
-      { logger: this.logger },
+      { logger: this.logger, signal: options?.signal },
     )
   }
 
