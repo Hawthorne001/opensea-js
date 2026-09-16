@@ -15,6 +15,7 @@ import {
   OPENSEA_SIGNED_ZONE_V2,
   SOMNIA_FEE_RECIPIENT,
   WPOL_ADDRESS,
+  ZERO_ADDRESS,
 } from "../../src/constants"
 import { Chain } from "../../src/types"
 import {
@@ -31,13 +32,9 @@ import {
 
 describe("Utils: chain", () => {
   describe("chain helper exhaustiveness", () => {
-    // Payment-token helpers throw by design (no Seaport deployment, or tokens
-    // not yet mapped in the SDK)
-    const SEAPORT_UNSUPPORTED_CHAINS = [
-      Chain.Solana,
-      Chain.Hyperliquid,
-      Chain.StableChain,
-    ]
+    // Payment-token helpers throw by design for chains without Seaport support.
+    const SEAPORT_UNSUPPORTED_CHAINS = [Chain.Solana, Chain.Hyperliquid]
+    const NO_WRAP_TOKEN_CHAINS = [Chain.StableChain, Chain.Arc]
     // Non-EVM chains with no numeric chain id
     const NO_CHAIN_ID_CHAINS = [Chain.Solana, Chain.Hyperliquid]
     const EVM_ADDRESS_RE = /^0x[0-9a-fA-F]{40}$/
@@ -51,7 +48,11 @@ describe("Utils: chain", () => {
         } else {
           expect(getOfferPaymentToken(chain)).toMatch(EVM_ADDRESS_RE)
           expect(getListingPaymentToken(chain)).toMatch(EVM_ADDRESS_RE)
-          expect(getNativeWrapTokenAddress(chain)).toMatch(EVM_ADDRESS_RE)
+          if (NO_WRAP_TOKEN_CHAINS.includes(chain)) {
+            expect(() => getNativeWrapTokenAddress(chain)).toThrow()
+          } else {
+            expect(getNativeWrapTokenAddress(chain)).toMatch(EVM_ADDRESS_RE)
+          }
         }
 
         if (NO_CHAIN_ID_CHAINS.includes(chain)) {
@@ -91,6 +92,7 @@ describe("Utils: chain", () => {
       [Chain.AnimeChain, "69000"],
       [Chain.Ink, "57073"],
       [Chain.Robinhood, "4663"],
+      [Chain.Arc, "5042"],
     ]
 
     for (const [chain, expectedId] of chainIdTests) {
@@ -236,6 +238,18 @@ describe("Utils: chain", () => {
       )
     })
 
+    test("returns USDT0 for Stable Chain", () => {
+      expect(getOfferPaymentToken(Chain.StableChain)).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("returns USDC for Arc", () => {
+      expect(getOfferPaymentToken(Chain.Arc)).toBe(
+        "0x3600000000000000000000000000000000000000",
+      )
+    })
+
     test("throws for Solana", () => {
       expect(() => getOfferPaymentToken(Chain.Solana)).toThrow(
         "Chain solana is not supported for OpenSea Seaport offers",
@@ -257,9 +271,7 @@ describe("Utils: chain", () => {
 
   describe("getListingPaymentToken", () => {
     test("returns ETH (0x0) for Mainnet", () => {
-      expect(getListingPaymentToken(Chain.Mainnet)).toBe(
-        "0x0000000000000000000000000000000000000000",
-      )
+      expect(getListingPaymentToken(Chain.Mainnet)).toBe(ZERO_ADDRESS)
     })
 
     test("returns ETH (0x0) for chains with native ETH", () => {
@@ -298,6 +310,14 @@ describe("Utils: chain", () => {
       expect(getListingPaymentToken(Chain.Polygon)).toBe(
         "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
       )
+    })
+
+    test("returns native gUSDT0 for Stable Chain", () => {
+      expect(getListingPaymentToken(Chain.StableChain)).toBe(ZERO_ADDRESS)
+    })
+
+    test("returns native USDC for Arc", () => {
+      expect(getListingPaymentToken(Chain.Arc)).toBe(ZERO_ADDRESS)
     })
 
     test("returns WAVAX for Avalanche", () => {
@@ -382,6 +402,18 @@ describe("Utils: chain", () => {
 
     test("returns conduit 2 for Robinhood", () => {
       const result = getDefaultConduit(Chain.Robinhood)
+      expect(result.key).toBe(OPENSEA_CONDUIT_KEY_2)
+      expect(result.address).toBe(OPENSEA_CONDUIT_ADDRESS_2)
+    })
+
+    test("returns conduit 2 for Stable Chain", () => {
+      const result = getDefaultConduit(Chain.StableChain)
+      expect(result.key).toBe(OPENSEA_CONDUIT_KEY_2)
+      expect(result.address).toBe(OPENSEA_CONDUIT_ADDRESS_2)
+    })
+
+    test("returns conduit 2 for Arc", () => {
+      const result = getDefaultConduit(Chain.Arc)
       expect(result.key).toBe(OPENSEA_CONDUIT_KEY_2)
       expect(result.address).toBe(OPENSEA_CONDUIT_ADDRESS_2)
     })
@@ -595,6 +627,18 @@ describe("Utils: chain", () => {
           getOfferPaymentToken(chain),
         )
       }
+    })
+
+    test("throws for Stable Chain", () => {
+      expect(() => getNativeWrapTokenAddress(Chain.StableChain)).toThrow(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("throws for Arc", () => {
+      expect(() => getNativeWrapTokenAddress(Chain.Arc)).toThrow(
+        "0x3600000000000000000000000000000000000000",
+      )
     })
   })
 })

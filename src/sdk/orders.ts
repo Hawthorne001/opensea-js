@@ -110,6 +110,18 @@ export class OrdersManager {
     }))
   }
 
+  private resolveOfferPaymentToken(collection: OpenSeaCollection): string {
+    const paymentTokenAddress =
+      collection.pricingCurrencies?.offerCurrency?.address
+    if (
+      paymentTokenAddress == null ||
+      paymentTokenAddress.toLowerCase() === ZERO_ADDRESS
+    ) {
+      return getOfferPaymentToken(this.context.chain)
+    }
+    return paymentTokenAddress
+  }
+
   private async getFees({
     collection,
     seller,
@@ -445,9 +457,7 @@ export class OrdersManager {
 
     const collection = await this.context.api.getCollection(nft.collection)
 
-    const paymentTokenAddress =
-      collection.pricingCurrencies?.offerCurrency?.address ??
-      getOfferPaymentToken(this.context.chain)
+    const paymentTokenAddress = this.resolveOfferPaymentToken(collection)
 
     const { basePrice } = await this.getPriceParametersCallback(
       OrderSide.OFFER,
@@ -924,9 +934,7 @@ export class OrdersManager {
       )
       const collection = await this.context.api.getCollection(nft.collection)
 
-      const paymentTokenAddress =
-        collection.pricingCurrencies?.offerCurrency?.address ??
-        getOfferPaymentToken(this.context.chain)
+      const paymentTokenAddress = this.resolveOfferPaymentToken(collection)
 
       let finalZone = zone
       if (collection.requiredZone) {
@@ -1056,9 +1064,7 @@ export class OrdersManager {
 
     const collection = await this.context.api.getCollection(collectionSlug)
 
-    const paymentTokenAddress =
-      collection.pricingCurrencies?.offerCurrency?.address ??
-      getOfferPaymentToken(this.context.chain)
+    const paymentTokenAddress = this.resolveOfferPaymentToken(collection)
 
     const buildOfferResult = await this.context.api.buildOffer(
       accountAddress,

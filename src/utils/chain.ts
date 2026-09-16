@@ -14,6 +14,7 @@ import {
   OPENSEA_SIGNED_ZONE_V2,
   SOMNIA_FEE_RECIPIENT,
   WPOL_ADDRESS,
+  ZERO_ADDRESS,
 } from "../constants"
 import { Chain } from "../types"
 import { CHAIN_ID_MAP } from "./chainIds.generated"
@@ -106,11 +107,10 @@ export const getOfferPaymentToken = (chain: Chain) => {
       return "0x3bd359c1119da7da1d913d1c4d2b7c461115433a" // WMON
     case Chain.Robinhood:
       return "0x0bd7d308f8e1639fab988df18a8011f41eacad73" // WETH
-    // Payment tokens not yet mapped in the SDK
+    case Chain.Arc:
+      return "0x3600000000000000000000000000000000000000" // USDC (6-decimal ERC20 mirror of native USDC)
     case Chain.StableChain:
-      throw new Error(
-        `Chain ${chain} is not supported for OpenSea Seaport offers`,
-      )
+      return "0x779ded0c9e1022225f8e0630b35a9b54be713736" // USDT0 (6-decimal ERC20 mirror of native gUSDT0)
     default: {
       const exhaustiveChain: never = chain
       throw new Error(`Unknown offer currency for ${exhaustiveChain}`)
@@ -167,11 +167,10 @@ export const getListingPaymentToken = (chain: Chain) => {
       return "0x0000000000000000000000000000000000000000" // ANIME
     case Chain.Robinhood:
       return "0x0000000000000000000000000000000000000000" // ETH
-    // Payment tokens not yet mapped in the SDK
+    case Chain.Arc:
+      return ZERO_ADDRESS
     case Chain.StableChain:
-      throw new Error(
-        `Chain ${chain} is not supported for OpenSea Seaport listings`,
-      )
+      return ZERO_ADDRESS
     default: {
       const exhaustiveChain: never = chain
       throw new Error(`Unknown listing currency for ${exhaustiveChain}`)
@@ -192,6 +191,8 @@ export const getDefaultConduit = (
     case Chain.HyperEVM:
     case Chain.Monad:
     case Chain.Robinhood:
+    case Chain.Arc:
+    case Chain.StableChain:
       return {
         key: OPENSEA_CONDUIT_KEY_2,
         address: OPENSEA_CONDUIT_ADDRESS_2,
@@ -260,6 +261,11 @@ export const getNativeWrapTokenAddress = (chain: Chain): string => {
   switch (chain) {
     case Chain.Polygon:
       return WPOL_ADDRESS
+    case Chain.Arc:
+    case Chain.StableChain:
+      throw new Error(
+        `Chain ${chain} has no wrapped native token; offers spend the native balance directly through ${getOfferPaymentToken(chain)}`,
+      )
     default:
       return getOfferPaymentToken(chain)
   }

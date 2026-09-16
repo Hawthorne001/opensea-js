@@ -1,6 +1,7 @@
 import { generateRandomSalt } from "@opensea/seaport-js/lib/utils/order"
 import { keccak256, toUtf8Bytes, ZeroAddress, ZeroHash } from "ethers"
 import { describe, expect, test, vi } from "vitest"
+import { ZERO_ADDRESS } from "../../src/constants"
 import { OrdersManager } from "../../src/sdk/orders"
 import { Chain, OrderSide } from "../../src/types"
 import {
@@ -164,6 +165,17 @@ describe("SDK: OrdersManager", () => {
     ordersManager = new OrdersManager(mockContext, mockGetPriceParameters)
   })
 
+  const createOrdersManagerForChain = (chain: Chain) =>
+    new OrdersManager(
+      createMockContext({
+        chain,
+        api: mockAPI,
+        seaport: mockSeaport,
+        requireAccountIsAvailable: mockRequireAccountIsAvailable,
+      }),
+      mockGetPriceParameters,
+    )
+
   afterEach(() => {
     vi.restoreAllMocks()
   })
@@ -309,6 +321,141 @@ describe("SDK: OrdersManager", () => {
       // Chain default for Mainnet offers is WETH
       expect(createOrderCall.offer[0].token).toBe(
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      )
+    })
+
+    test("normalizes native Stable Chain offer currency to USDT0", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "gUSDT0",
+            symbol: "gUSDT0",
+            decimals: 18,
+            address: ZERO_ADDRESS,
+            chain: "stable_chain",
+          },
+        },
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createOffer({
+        asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("normalizes native Arc offer currency to USDC", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "USDC",
+            symbol: "USDC",
+            decimals: 18,
+            address: ZERO_ADDRESS,
+            chain: "arc",
+          },
+        },
+      })
+      const arcOrdersManager = createOrdersManagerForChain(Chain.Arc)
+
+      await arcOrdersManager.createOffer({
+        asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x3600000000000000000000000000000000000000",
+      )
+    })
+
+    test("passes through an explicit Stable Chain offer mirror", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "USDT0",
+            symbol: "USDT0",
+            decimals: 6,
+            address: "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+            chain: "stable_chain",
+          },
+        },
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createOffer({
+        asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("falls back to the Stable Chain offer mirror without pricing currencies", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: undefined,
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createOffer({
+        asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("falls back to the Stable Chain offer mirror for a null currency address", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "gUSDT0",
+            symbol: "gUSDT0",
+            decimals: 18,
+            address: null,
+            chain: "stable_chain",
+          },
+        },
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createOffer({
+        asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
       )
     })
   })
@@ -664,6 +811,88 @@ describe("SDK: OrdersManager", () => {
       // Chain default for Mainnet offers is WETH
       expect(createOrderCall.offer[0].token).toBe(
         "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      )
+    })
+
+    test("normalizes native Stable Chain offer currency to USDT0", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "gUSDT0",
+            symbol: "gUSDT0",
+            decimals: 18,
+            address: ZERO_ADDRESS,
+            chain: "stable_chain",
+          },
+        },
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createCollectionOffer({
+        collectionSlug: "test-collection",
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+        quantity: 1,
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("passes through an explicit Stable Chain offer mirror", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "USDT0",
+            symbol: "USDT0",
+            decimals: 6,
+            address: "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+            chain: "stable_chain",
+          },
+        },
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createCollectionOffer({
+        collectionSlug: "test-collection",
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+        quantity: 1,
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
+    test("falls back to the Stable Chain offer mirror without pricing currencies", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: undefined,
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createCollectionOffer({
+        collectionSlug: "test-collection",
+        accountAddress: "0xBuyer",
+        amount: "1.5",
+        quantity: 1,
+      })
+
+      const createOrderCall = mockSeaport.createOrder.mock.calls[0][0]
+      expect(createOrderCall.offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
       )
     })
 
@@ -1166,6 +1395,46 @@ describe("SDK: OrdersManager", () => {
   })
 
   describe("createBulkOffers", () => {
+    test("normalizes native Stable Chain offer currency to USDT0", async () => {
+      mockAPI.getCollection.mockResolvedValue({
+        ...mockCollection,
+        pricingCurrencies: {
+          offerCurrency: {
+            name: "gUSDT0",
+            symbol: "gUSDT0",
+            decimals: 18,
+            address: ZERO_ADDRESS,
+            chain: "stable_chain",
+          },
+        },
+      })
+      mockSeaport.createBulkOrders = vi.fn().mockResolvedValue({
+        executeAllActions: vi.fn().mockResolvedValue([mockOrder, mockOrder]),
+      })
+      const stableChainOrdersManager = createOrdersManagerForChain(
+        Chain.StableChain,
+      )
+
+      await stableChainOrdersManager.createBulkOffers({
+        offers: [
+          {
+            asset: { tokenAddress: "0xNFTContract", tokenId: "1234" },
+            amount: "1.5",
+          },
+          {
+            asset: { tokenAddress: "0xNFTContract", tokenId: "5678" },
+            amount: "2.5",
+          },
+        ],
+        accountAddress: "0xBuyer",
+      })
+
+      const createBulkOrdersCall = mockSeaport.createBulkOrders.mock.calls[0][0]
+      expect(createBulkOrdersCall[0].offer[0].token).toBe(
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736",
+      )
+    })
+
     test("creates multiple offers successfully with bulk signature", async () => {
       const mockBulkOrders = [
         {

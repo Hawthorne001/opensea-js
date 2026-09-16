@@ -271,6 +271,20 @@ describe("API: EventsAPI", () => {
       })
     })
 
+    test("forwards the chain filter", async () => {
+      mockGet.mockResolvedValue({ assetEvents: [], next: undefined })
+
+      await eventsAPI.getEventsByAccount("0x123", {
+        chain: Chain.Polygon,
+        eventType: "sale",
+      })
+
+      expect(mockGet.mock.calls[0][1]).toEqual({
+        chain: Chain.Polygon,
+        eventType: "sale",
+      })
+    })
+
     test("handles lowercase address", async () => {
       const address = "0xabcdef1234567890123456789012345678901234"
       const mockResponse: GetEventsResponse = {
@@ -406,6 +420,21 @@ describe("API: EventsAPI", () => {
 
       expect(mockGet.mock.calls[0][1]).toEqual({ limit: 5 })
     })
+
+    test("omits the chain filter and keeps event and trait filters", async () => {
+      mockGet.mockResolvedValue({ assetEvents: [], next: undefined })
+
+      await eventsAPI.getEventsByCollection("test-collection", {
+        chain: Chain.Polygon,
+        eventType: "sale",
+        traits: [{ traitType: "Background", value: "Red" }],
+      })
+
+      expect(mockGet.mock.calls[0][1]).toEqual({
+        eventType: "sale",
+        traits: '[{"traitType":"Background","value":"Red"}]',
+      })
+    })
   })
 
   describe("getEventsByNFT", () => {
@@ -465,6 +494,19 @@ describe("API: EventsAPI", () => {
       expect(mockGet.mock.calls[0][1]).toEqual({
         eventType: "transfer",
         limit: 5,
+      })
+    })
+
+    test("omits the chain filter from the query", async () => {
+      mockGet.mockResolvedValue({ assetEvents: [], next: undefined })
+
+      await eventsAPI.getEventsByNFT(Chain.Polygon, "0x123", "1", {
+        chain: Chain.Polygon,
+        eventType: "sale",
+      })
+
+      expect(mockGet.mock.calls[0][1]).toEqual({
+        eventType: "sale",
       })
     })
 

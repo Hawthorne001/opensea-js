@@ -4,7 +4,7 @@ import type {
   OperationResponse,
   operations,
 } from "@opensea/api-types"
-import type { Camelize } from "../utils/case"
+import { type Camelize, snakeizeKeysDeep } from "../utils/case"
 import { segment } from "./apiPaths"
 import type { WalletAuthFetcher } from "./fetcher"
 
@@ -541,10 +541,10 @@ export class WalletAuthAPI {
    * urllib all drop DELETE bodies by default, and proxies may strip them.
    */
   revokeAgentRelationship(query: WalletAuthQuery<"revoke_agent_relationship">) {
-    const params = new URLSearchParams({
-      counterparty_address: query.counterpartyAddress,
-      caller_role: query.callerRole,
-    })
+    const params = new URLSearchParams()
+    for (const [key, value] of Object.entries(snakeizeKeysDeep(query))) {
+      if (value != null) params.set(key, String(value))
+    }
     return this.fetcher.request<OperationResponse<"revoke_agent_relationship">>(
       "DELETE",
       `/api/v2/accounts/agent-relationships?${params}`,

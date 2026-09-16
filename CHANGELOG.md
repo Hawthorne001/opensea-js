@@ -1,5 +1,20 @@
 # @opensea/sdk
 
+## 12.9.0
+
+### Minor Changes
+
+- cd6e615: Support Arc: offers use the 6-decimal USDC native mirror (0x3600…0000), listings use native USDC, approvals use the OS Ledger conduit. Native (0x0) offer currencies advertised by the API are normalized to the mirror.
+- 0c24b3e: Support Stable Chain for offers and listings: offers use the 6-decimal USDT0 native mirror (0x779d…3736), listings use native gUSDT0, approvals use the OS Ledger conduit. Native (0x0) offer currencies advertised by the API are normalized to the mirror.
+
+### Patch Changes
+
+- Stop forwarding `chain` on `getEventsByCollection` and `getEventsByNFT`; only the account events endpoint documents that filter, and the NFT endpoint already carries the chain in its path. Thanks @Osraka ([opensea-sdk#2011](https://github.com/ProjectOpenSea/opensea-sdk/pull/2011), fixes [opensea-sdk#2010](https://github.com/ProjectOpenSea/opensea-sdk/issues/2010)).
+- cd6e615: Sync OpenAPI spec: add `arc` chain identifier; agent relationships gain `ConfirmAgentRelationshipRequestBody` and optional `counterparty_account_id` addressing, `AgentRelationshipResponse` drops `initiator_address`/`counterparty_address`/`initiated_by`. `revokeAgentRelationship` serializes whichever counterparty identifier is provided (`counterpartyAccountId` or `counterpartyAddress`).
+- Updated dependencies [fbbbea4]
+- Updated dependencies [cd6e615]
+  - @opensea/api-types@0.12.0
+
 ## 12.8.0
 
 ### Minor Changes

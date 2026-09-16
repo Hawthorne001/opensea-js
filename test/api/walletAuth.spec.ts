@@ -326,6 +326,17 @@ describe("WalletAuthAPI", () => {
       )
     })
 
+    it("serializes a counterparty account id in the revoke query", async () => {
+      await api.revokeAgentRelationship({
+        counterpartyAccountId: "acct_1",
+        callerRole: "OWNER",
+      })
+
+      expect(request.mock.calls.at(-1)?.[1]).toBe(
+        "/api/v2/accounts/agent-relationships?counterparty_account_id=acct_1&caller_role=OWNER",
+      )
+    })
+
     it("reads the caller's own relationships over GET", async () => {
       await api.listOwnAgentRelationships()
       expect(get).toHaveBeenLastCalledWith(
