@@ -1,5 +1,11 @@
 # @opensea/sdk
 
+## 12.9.1
+
+### Patch Changes
+
+- 2457887: Price Arc and Stable Chain offers with the six decimals of their USDC / USDT0 default offer currencies instead of 18, in both the ethers and viem entrypoints. Default offer-currency decimals now come from a single per-chain table (`getOfferPaymentTokenDecimals`, `getDefaultPaymentTokenDecimals`, `usesNativeStablecoinOffers`) so further chains with native-stablecoin offer mirrors opt in by adding one entry.
+
 ## 12.9.0
 
 ### Minor Changes

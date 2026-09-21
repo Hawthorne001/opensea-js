@@ -21,13 +21,16 @@ import { Chain } from "../../src/types"
 import {
   getChainId,
   getDefaultConduit,
+  getDefaultPaymentTokenDecimals,
   getFeeRecipient,
   getListingPaymentToken,
   getNativeWrapTokenAddress,
   getOfferPaymentToken,
+  getOfferPaymentTokenDecimals,
   getSeaportAddress,
   getSignedZone,
   usesAlternateProtocol,
+  usesNativeStablecoinOffers,
 } from "../../src/utils/chain"
 
 describe("Utils: chain", () => {
@@ -49,8 +52,11 @@ describe("Utils: chain", () => {
           expect(getOfferPaymentToken(chain)).toMatch(EVM_ADDRESS_RE)
           expect(getListingPaymentToken(chain)).toMatch(EVM_ADDRESS_RE)
           if (NO_WRAP_TOKEN_CHAINS.includes(chain)) {
+            expect(usesNativeStablecoinOffers(chain)).toBe(true)
             expect(() => getNativeWrapTokenAddress(chain)).toThrow()
           } else {
+            expect(usesNativeStablecoinOffers(chain)).toBe(false)
+            expect(getOfferPaymentTokenDecimals(chain)).toBe(18)
             expect(getNativeWrapTokenAddress(chain)).toMatch(EVM_ADDRESS_RE)
           }
         }
@@ -266,6 +272,48 @@ describe("Utils: chain", () => {
       expect(() => getOfferPaymentToken("UNKNOWN_CHAIN" as Chain)).toThrow(
         "Unknown offer currency for UNKNOWN_CHAIN",
       )
+    })
+  })
+
+  describe("getOfferPaymentTokenDecimals", () => {
+    test("returns 6 for the Arc and Stable Chain stablecoin mirrors", () => {
+      expect(getOfferPaymentTokenDecimals(Chain.Arc)).toBe(6)
+      expect(getOfferPaymentTokenDecimals(Chain.StableChain)).toBe(6)
+    })
+
+    test("returns 18 for wrapped-native offer currencies", () => {
+      expect(getOfferPaymentTokenDecimals(Chain.Mainnet)).toBe(18)
+      expect(getOfferPaymentTokenDecimals(Chain.Polygon)).toBe(18)
+      expect(getOfferPaymentTokenDecimals(Chain.Base)).toBe(18)
+    })
+  })
+
+  describe("getDefaultPaymentTokenDecimals", () => {
+    test("seeds the offer mirror with 6 decimals and native listings with 18 on Arc", () => {
+      expect(getDefaultPaymentTokenDecimals(Chain.Arc)).toEqual({
+        "0x3600000000000000000000000000000000000000": 6,
+        [ZERO_ADDRESS]: 18,
+      })
+    })
+
+    test("seeds the offer mirror with 6 decimals and native listings with 18 on Stable Chain", () => {
+      expect(getDefaultPaymentTokenDecimals(Chain.StableChain)).toEqual({
+        "0x779ded0c9e1022225f8e0630b35a9b54be713736": 6,
+        [ZERO_ADDRESS]: 18,
+      })
+    })
+
+    test("seeds WETH and ETH with 18 decimals on Mainnet", () => {
+      expect(getDefaultPaymentTokenDecimals(Chain.Mainnet)).toEqual({
+        "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": 18,
+        [ZERO_ADDRESS]: 18,
+      })
+    })
+
+    test("keys by lowercase address when the offer and listing token coincide", () => {
+      expect(getDefaultPaymentTokenDecimals(Chain.Polygon)).toEqual({
+        "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619": 18,
+      })
     })
   })
 

@@ -28,6 +28,41 @@ import { CHAIN_ID_MAP } from "./chainIds.generated"
 export const usesAlternateProtocol = (chain: Chain): boolean =>
   chain === Chain.Gunzilla || chain === Chain.Somnia || chain === Chain.MegaETH
 
+/** Decimals of native assets and of every wrapped native token the SDK defaults to. */
+const NATIVE_DECIMALS = 18
+
+/**
+ * Chains whose default offer currency is an ERC-20 mirror of the native
+ * stablecoin rather than a wrapped native token. The mirror spends the native
+ * balance directly, so there is no wrap/unwrap contract, and its decimals
+ * differ from the native asset's. Adding a chain here opts it in everywhere.
+ */
+const NATIVE_STABLECOIN_OFFER_TOKENS = {
+  [Chain.Arc]: {
+    address: "0x3600000000000000000000000000000000000000", // USDC
+    decimals: 6,
+  },
+  [Chain.StableChain]: {
+    address: "0x779ded0c9e1022225f8e0630b35a9b54be713736", // USDT0
+    decimals: 6,
+  },
+} as const satisfies Partial<
+  Record<Chain, { address: string; decimals: number }>
+>
+
+type NativeStablecoinOfferChain = keyof typeof NATIVE_STABLECOIN_OFFER_TOKENS
+
+/**
+ * Checks if a chain's default offer currency is a native stablecoin mirror
+ * instead of a wrapped native token.
+ * @param chain The chain to check
+ * @returns True if offers on the chain spend the native stablecoin through an ERC-20 mirror
+ */
+export const usesNativeStablecoinOffers = (
+  chain: Chain,
+): chain is NativeStablecoinOfferChain =>
+  chain in NATIVE_STABLECOIN_OFFER_TOKENS
+
 /**
  * Gets the chain ID for a given chain.
  *
@@ -60,6 +95,9 @@ export const getOfferPaymentToken = (chain: Chain) => {
     throw new Error(
       `Chain ${chain} is not supported for OpenSea Seaport offers`,
     )
+  }
+  if (usesNativeStablecoinOffers(chain)) {
+    return NATIVE_STABLECOIN_OFFER_TOKENS[chain].address
   }
   switch (chain) {
     case Chain.Mainnet:
@@ -107,16 +145,36 @@ export const getOfferPaymentToken = (chain: Chain) => {
       return "0x3bd359c1119da7da1d913d1c4d2b7c461115433a" // WMON
     case Chain.Robinhood:
       return "0x0bd7d308f8e1639fab988df18a8011f41eacad73" // WETH
-    case Chain.Arc:
-      return "0x3600000000000000000000000000000000000000" // USDC (6-decimal ERC20 mirror of native USDC)
-    case Chain.StableChain:
-      return "0x779ded0c9e1022225f8e0630b35a9b54be713736" // USDT0 (6-decimal ERC20 mirror of native gUSDT0)
     default: {
       const exhaustiveChain: never = chain
       throw new Error(`Unknown offer currency for ${exhaustiveChain}`)
     }
   }
 }
+
+/**
+ * Returns the decimals of the default offer currency on the given chain.
+ * @param chain The chain to get the offer payment token decimals for
+ * @returns The number of decimals the token uses
+ */
+export const getOfferPaymentTokenDecimals = (chain: Chain): number =>
+  usesNativeStablecoinOffers(chain)
+    ? NATIVE_STABLECOIN_OFFER_TOKENS[chain].decimals
+    : NATIVE_DECIMALS
+
+/**
+ * Returns the decimals of the chain's default offer and listing currencies,
+ * keyed by lowercase address, so pricing them never needs a metadata request.
+ * @param chain The chain to seed the payment token decimals cache for
+ * @returns A map of lowercase token address to decimals
+ */
+export const getDefaultPaymentTokenDecimals = (
+  chain: Chain,
+): { [address: string]: number } => ({
+  [getListingPaymentToken(chain).toLowerCase()]: NATIVE_DECIMALS,
+  [getOfferPaymentToken(chain).toLowerCase()]:
+    getOfferPaymentTokenDecimals(chain),
+})
 
 /**
  * Returns the default currency for listings on the given chain.
@@ -258,14 +316,14 @@ export const getFeeRecipient = (chain: Chain): string => {
  * @returns The token address for wrap/unwrap operations
  */
 export const getNativeWrapTokenAddress = (chain: Chain): string => {
+  if (usesNativeStablecoinOffers(chain)) {
+    throw new Error(
+      `Chain ${chain} has no wrapped native token; offers spend the native balance directly through ${getOfferPaymentToken(chain)}`,
+    )
+  }
   switch (chain) {
     case Chain.Polygon:
       return WPOL_ADDRESS
-    case Chain.Arc:
-    case Chain.StableChain:
-      throw new Error(
-        `Chain ${chain} has no wrapped native token; offers spend the native balance directly through ${getOfferPaymentToken(chain)}`,
-      )
     default:
       return getOfferPaymentToken(chain)
   }

@@ -10,8 +10,7 @@ import { BaseOpenSeaSDK } from "./sdk/base"
 import { Chain, type OpenSeaAPIConfig } from "./types"
 import {
   getDefaultConduit,
-  getListingPaymentToken,
-  getOfferPaymentToken,
+  getDefaultPaymentTokenDecimals,
   getSeaportAddress,
 } from "./utils/utils"
 
@@ -61,10 +60,6 @@ export class OpenSeaSDK extends BaseOpenSeaSDK {
       },
     })
 
-    const cachedPaymentTokenDecimals: { [address: string]: number } = {}
-    cachedPaymentTokenDecimals[getOfferPaymentToken(chain).toLowerCase()] = 18
-    cachedPaymentTokenDecimals[getListingPaymentToken(chain).toLowerCase()] = 18
-
     super({
       wallet,
       contractCaller,
@@ -74,7 +69,7 @@ export class OpenSeaSDK extends BaseOpenSeaSDK {
       logger: resolvedLogger,
       getAvailableAccounts: () =>
         getEthersAccounts(signerOrProvider, resolvedLogger),
-      cachedPaymentTokenDecimals,
+      cachedPaymentTokenDecimals: getDefaultPaymentTokenDecimals(chain),
     })
   }
 }

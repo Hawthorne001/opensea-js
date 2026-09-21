@@ -32,8 +32,7 @@ import { Chain, type OpenSeaAPIConfig } from "./types"
 import { checksumAddress } from "./utils/address"
 import {
   getDefaultConduit,
-  getListingPaymentToken,
-  getOfferPaymentToken,
+  getDefaultPaymentTokenDecimals,
   getSeaportAddress,
 } from "./utils/utils"
 
@@ -100,10 +99,6 @@ export class OpenSeaSDK extends BaseOpenSeaSDK {
       },
     })
 
-    const cachedPaymentTokenDecimals: { [address: string]: number } = {}
-    cachedPaymentTokenDecimals[getOfferPaymentToken(chain).toLowerCase()] = 18
-    cachedPaymentTokenDecimals[getListingPaymentToken(chain).toLowerCase()] = 18
-
     super({
       wallet,
       contractCaller,
@@ -122,7 +117,7 @@ export class OpenSeaSDK extends BaseOpenSeaSDK {
         }
         return []
       },
-      cachedPaymentTokenDecimals,
+      cachedPaymentTokenDecimals: getDefaultPaymentTokenDecimals(chain),
     })
   }
 }
