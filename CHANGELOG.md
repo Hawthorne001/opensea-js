@@ -1,5 +1,13 @@
 # @opensea/sdk
 
+## 12.9.2
+
+### Patch Changes
+
+- 7d51b1f: `appendCalldataSuffix` accepts a `null` suffix, which the API returns when a fulfillment has no attribution suffix. Behavior is unchanged: a missing suffix leaves the calldata as is.
+- Updated dependencies [7d51b1f]
+  - @opensea/api-types@0.13.0
+
 ## 12.9.1
 
 ### Patch Changes

@@ -20,7 +20,7 @@ const CALLDATA_SUFFIX_PATTERN = /^0x[0-9a-f]{8}$/i
  */
 export function appendCalldataSuffix(
   calldata: string,
-  suffix: string | undefined,
+  suffix: string | null | undefined,
 ): string {
   if (!suffix || !CALLDATA_SUFFIX_PATTERN.test(suffix)) {
     return calldata
