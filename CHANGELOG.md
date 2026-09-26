@@ -1,5 +1,11 @@
 # @opensea/sdk
 
+## 12.10.0
+
+### Minor Changes
+
+- fce0d1d: Add `walletAuth` helpers for the drop publish flow: `buildDropPublishTransaction(slug)`, `buildDropUnpublishTransaction(slug)`, `uploadDropMetadataToIpfs(slug)`, `getDropMetadataIpfsProgress(slug, workflowExecutionId)` and `createDropCollectionManifestUpload(slug)`. The manifest helper returns an `UploadContext` whose `fields` are left un-camelized, like the other upload helpers, so they can be submitted unchanged.
+
 ## 12.9.2
 
 ### Patch Changes

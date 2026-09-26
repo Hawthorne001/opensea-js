@@ -27,9 +27,9 @@ afterEach(() => {
 
 describe("wallet-auth upload contexts", () => {
   it("preserves signed multipart field names through the fetch boundary", async () => {
-    // Both response shapes the four upload operations return: one context, and
-    // an array of them for drop item media.
-    const responses: unknown[] = [uploadContext, [uploadContext]]
+    // Both response shapes the upload operations return: one context, and an
+    // array of them for drop item media.
+    const responses: unknown[] = [uploadContext, [uploadContext], uploadContext]
     vi.stubGlobal(
       "fetch",
       vi.fn(
@@ -47,8 +47,12 @@ describe("wallet-auth upload contexts", () => {
       filenames: [],
     })
 
+    const manifest =
+      await api.walletAuth.createDropCollectionManifestUpload("drop")
+
     expect(profile.fields).toEqual(uploadContext.fields)
     expect(dropMedia[0].fields).toEqual(uploadContext.fields)
+    expect(manifest.fields).toEqual(uploadContext.fields)
   })
 
   it("opts every UploadContext helper out of response camelization", async () => {
@@ -68,6 +72,7 @@ describe("wallet-auth upload contexts", () => {
     const calls = [
       () => api.createDropItemMediaUpload("drop", dropMediaBody),
       () => api.createDropAllowlistUpload("drop"),
+      () => api.createDropCollectionManifestUpload("drop"),
       () =>
         api.createCollectionImageUpload("collection", "banner", "image/png"),
       () => api.createProfileImageUpload(profileImageBody),

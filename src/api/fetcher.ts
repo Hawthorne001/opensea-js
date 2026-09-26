@@ -45,7 +45,7 @@ export type HttpMethod = "POST" | "PUT" | "PATCH" | "DELETE"
  * back camelCase where the raw overload promises the wire shape. That was true
  * before this overload existed, in the other direction, since a custom
  * transport that honored the flag returned raw data typed as `Camelize<T>`.
- * The only in-package callers of the option are the four `UploadContext`
+ * The only in-package callers of the option are the five `UploadContext`
  * helpers on `WalletAuthAPI` and `getTraits`, whose response types are
  * identical under `Camelize`, so neither spelling can be wrong for them.
  */

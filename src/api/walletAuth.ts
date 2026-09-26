@@ -280,6 +280,60 @@ export class WalletAuthAPI {
     )
   }
 
+  /**
+   * `UploadContext.fields` is an opaque signed multipart field map that the
+   * caller must submit unchanged, so the response is not camelized. Unlike the
+   * other upload contexts, the returned token is not passed to a later call:
+   * the next `saveDropItemMedia` reads the stored manifest.
+   */
+  createDropCollectionManifestUpload(slug: string) {
+    return this.fetcher.request<
+      OperationResponse<"upload_drop_collection_manifest">
+    >(
+      "POST",
+      `/api/v2/drops/${segment(slug)}/items/manifest`,
+      undefined,
+      undefined,
+      { camelizeResponse: false },
+    )
+  }
+
+  /**
+   * Build the transaction that publishes the drop's saved draft onchain. It
+   * must be sent from the returned `from`, the contract's onchain owner; sent
+   * from any other address it reverts.
+   */
+  buildDropPublishTransaction(slug: string) {
+    return this.fetcher.request<
+      OperationResponse<"build_drop_publish_transaction">
+    >("POST", `/api/v2/drops/${segment(slug)}/publish`)
+  }
+
+  /** Same sender rule as `buildDropPublishTransaction`. */
+  buildDropUnpublishTransaction(slug: string) {
+    return this.fetcher.request<
+      OperationResponse<"build_drop_unpublish_transaction">
+    >("POST", `/api/v2/drops/${segment(slug)}/unpublish`)
+  }
+
+  /**
+   * Start uploading the drop's item media and metadata to IPFS. Follow it with
+   * `getDropMetadataIpfsProgress` using the returned `workflowExecutionId`.
+   */
+  uploadDropMetadataToIpfs(slug: string) {
+    return this.fetcher.request<
+      OperationResponse<"upload_drop_metadata_to_ipfs">
+    >("POST", `/api/v2/drops/${segment(slug)}/metadata/ipfs`)
+  }
+
+  getDropMetadataIpfsProgress(slug: string, workflowExecutionId: string) {
+    return this.fetcher.get<
+      OperationResponse<"get_drop_metadata_ipfs_progress">
+    >(
+      `/api/v2/drops/${segment(slug)}/metadata/ipfs/${segment(workflowExecutionId)}`,
+    )
+  }
+
   modifyCollection(slug: string, body: WalletAuthRequest<"modify_collection">) {
     return this.fetcher.request<OperationResponse<"modify_collection">>(
       "PATCH",

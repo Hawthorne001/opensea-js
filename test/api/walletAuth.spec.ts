@@ -1,4 +1,5 @@
-import { beforeEach, describe, expect, it, vi } from "vitest"
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
+import { OpenSeaAPI } from "../../src/api/api"
 import type { WalletAuthFetcher } from "../../src/api/fetcher"
 import { WalletAuthAPI } from "../../src/api/walletAuth"
 
@@ -106,6 +107,26 @@ describe("WalletAuthAPI", () => {
         "POST",
         "/api/v2/drops/drop/allowlist/validate",
         () => api.validateDropAllowlist("drop", body),
+      ],
+      [
+        "POST",
+        "/api/v2/drops/my%20drop/items/manifest",
+        () => api.createDropCollectionManifestUpload("my drop"),
+      ],
+      [
+        "POST",
+        "/api/v2/drops/my%20drop/publish",
+        () => api.buildDropPublishTransaction("my drop"),
+      ],
+      [
+        "POST",
+        "/api/v2/drops/my%20drop/unpublish",
+        () => api.buildDropUnpublishTransaction("my drop"),
+      ],
+      [
+        "POST",
+        "/api/v2/drops/my%20drop/metadata/ipfs",
+        () => api.uploadDropMetadataToIpfs("my drop"),
       ],
       [
         "PATCH",
@@ -271,11 +292,39 @@ describe("WalletAuthAPI", () => {
       limit: 20,
     })
 
+    await api.getDropMetadataIpfsProgress("my drop", "run/1")
+    expect(get).toHaveBeenLastCalledWith(
+      "/api/v2/drops/my%20drop/metadata/ipfs/run%2F1",
+    )
+
     await api.listSavedTools({ toolkitName: "trading", limit: 5 })
     expect(get).toHaveBeenLastCalledWith("/api/v2/saved-tools", {
       toolkitName: "trading",
       limit: 5,
     })
+  })
+
+  it("sends the drop publish, unpublish and IPFS writes without a body", async () => {
+    const calls: [string, () => Promise<unknown>][] = [
+      [
+        "/api/v2/drops/drop/publish",
+        () => api.buildDropPublishTransaction("drop"),
+      ],
+      [
+        "/api/v2/drops/drop/unpublish",
+        () => api.buildDropUnpublishTransaction("drop"),
+      ],
+      [
+        "/api/v2/drops/drop/metadata/ipfs",
+        () => api.uploadDropMetadataToIpfs("drop"),
+      ],
+    ]
+    for (const [path, run] of calls) {
+      request.mockClear()
+      await run()
+      // No body and no options, so the default camelized response applies.
+      expect(request).toHaveBeenLastCalledWith("POST", path)
+    }
   })
 
   describe("agent accounts", () => {
@@ -353,6 +402,46 @@ describe("WalletAuthAPI", () => {
         "DELETE",
         "/api/v2/accounts/agent",
       )
+    })
+  })
+})
+
+describe("drop IPFS metadata responses", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("camelizes the upload id and progress fields at the fetch boundary", async () => {
+    const responses: unknown[] = [
+      { workflow_execution_id: "run-1" },
+      {
+        status: "failed",
+        media_upload_progress: 100,
+        metadata_upload_progress: 40,
+        failure_reason: "pin failed",
+      },
+    ]
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(
+        async () =>
+          new Response(JSON.stringify(responses.shift()), { status: 200 }),
+      ),
+    )
+    const api = new OpenSeaAPI({ apiKey: "key", authToken: "jwt" })
+
+    const started = await api.walletAuth.uploadDropMetadataToIpfs("drop")
+    const progress = await api.walletAuth.getDropMetadataIpfsProgress(
+      "drop",
+      started.workflowExecutionId,
+    )
+
+    expect(started).toEqual({ workflowExecutionId: "run-1" })
+    expect(progress).toEqual({
+      status: "failed",
+      mediaUploadProgress: 100,
+      metadataUploadProgress: 40,
+      failureReason: "pin failed",
     })
   })
 })
