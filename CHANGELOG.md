@@ -1,5 +1,12 @@
 # @opensea/sdk
 
+## 12.10.1
+
+### Patch Changes
+
+- Updated dependencies [3f93447]
+  - @opensea/api-types@0.14.0
+
 ## 12.10.0
 
 ### Minor Changes
