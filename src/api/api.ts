@@ -1285,7 +1285,9 @@ export class OpenSeaAPI {
 
   /**
    * Fetch paginated holders for a token, including quantity held, USD value,
-   * and aggregate distribution health (STRONG | HEALTHY | CONCERNING | BAD).
+   * and holder distribution: top-holder concentration and a health label
+   * (STRONG | HEALTHY | CONCERNING | BAD). See `api.tokens.getTokenHolders()`
+   * for the distribution fields.
    * @deprecated Use `api.tokens.getTokenHolders()`. Removed in the next major.
    */
   public async getTokenHolders(

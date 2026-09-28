@@ -226,9 +226,18 @@ export class TokensAPI {
   }
 
   /**
-   * Fetch paginated holders for a token, including quantity held, USD value,
-   * and an aggregate distribution health label (STRONG | HEALTHY |
-   * CONCERNING | BAD).
+   * Fetch paginated holders for a token, including quantity held, USD value
+   * and percentage held.
+   *
+   * `distribution` summarizes the holder base, and is null for tokens the API
+   * has not measured: `totalHolders`, `topHoldersCount` (the measured top
+   * cohort, 250 or every holder when there are fewer), `topHoldersConcentration`
+   * (percent of eligible supply that cohort holds, 0-100, where eligible supply
+   * excludes mint, LP, CEX and burn holdings), and `healthScore` with
+   * `healthLabel` (STRONG | HEALTHY | CONCERNING | BAD).
+   * `topOnePercentConcentration` is deprecated in favor of
+   * `topHoldersConcentration`: for tokens with more than 25,000 holders it is
+   * approximated from the same 250 rows.
    */
   async getTokenHolders(
     chain: Chain,

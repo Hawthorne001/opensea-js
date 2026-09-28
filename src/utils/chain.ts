@@ -31,11 +31,18 @@ export const usesAlternateProtocol = (chain: Chain): boolean =>
 /** Decimals of native assets and of every wrapped native token the SDK defaults to. */
 const NATIVE_DECIMALS = 18
 
+// Enum members, not `keyof typeof NATIVE_STABLECOIN_OFFER_TOKENS`: the emitted
+// declaration writes computed enum keys as their string values, so the
+// predicate below would narrow `Chain` to `"arc" | "stablechain"` and fail a
+// consumer's typecheck (TS2677) whenever skipLibCheck is off.
+type NativeStablecoinOfferChain = Chain.Arc | Chain.StableChain
+
 /**
  * Chains whose default offer currency is an ERC-20 mirror of the native
  * stablecoin rather than a wrapped native token. The mirror spends the native
  * balance directly, so there is no wrap/unwrap contract, and its decimals
- * differ from the native asset's. Adding a chain here opts it in everywhere.
+ * differ from the native asset's. Adding a chain here and to
+ * `NativeStablecoinOfferChain` opts it in everywhere.
  */
 const NATIVE_STABLECOIN_OFFER_TOKENS = {
   [Chain.Arc]: {
@@ -46,11 +53,10 @@ const NATIVE_STABLECOIN_OFFER_TOKENS = {
     address: "0x779ded0c9e1022225f8e0630b35a9b54be713736", // USDT0
     decimals: 6,
   },
-} as const satisfies Partial<
-  Record<Chain, { address: string; decimals: number }>
+} as const satisfies Record<
+  NativeStablecoinOfferChain,
+  { address: string; decimals: number }
 >
-
-type NativeStablecoinOfferChain = keyof typeof NATIVE_STABLECOIN_OFFER_TOKENS
 
 /**
  * Checks if a chain's default offer currency is a native stablecoin mirror

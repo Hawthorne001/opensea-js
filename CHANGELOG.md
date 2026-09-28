@@ -1,5 +1,15 @@
 # @opensea/sdk
 
+## 12.10.2
+
+### Patch Changes
+
+- a1e4356: Fix the published declarations failing a consumer typecheck with `skipLibCheck: false`. `lib/utils/chain.d.ts` declared `usesNativeStablecoinOffers(chain: Chain): chain is "stablechain" | "arc"`, and TypeScript rejects a predicate whose type is not assignable to its parameter (TS2677). The predicate is now `chain is Chain.Arc | Chain.StableChain`. Runtime behavior is unchanged.
+- f5676f0: Document the holder distribution on `api.tokens.getTokenHolders()`: `distribution` carries `totalHolders`, `topHoldersCount`, `topHoldersConcentration`, `healthScore` and `healthLabel`, and is null for tokens the API has not measured. `topOnePercentConcentration` is deprecated in favor of `topHoldersConcentration`. The two new fields are typed through `@opensea/api-types` 0.14.2.
+- Updated dependencies [6ffe0c9]
+- Updated dependencies [e7882a8]
+  - @opensea/api-types@0.14.2
+
 ## 12.10.1
 
 ### Patch Changes
