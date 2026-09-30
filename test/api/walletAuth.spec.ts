@@ -100,6 +100,11 @@ describe("WalletAuthAPI", () => {
       ],
       [
         "POST",
+        "/api/v2/drops/my%20drop/items/media/save-batch",
+        () => api.saveDropItemMediaBatch("my drop", body),
+      ],
+      [
+        "POST",
         "/api/v2/drops/drop/allowlist",
         () => api.createDropAllowlistUpload("drop"),
       ],
@@ -443,5 +448,49 @@ describe("drop IPFS metadata responses", () => {
       metadataUploadProgress: 40,
       failureReason: "pin failed",
     })
+  })
+})
+
+describe("drop item media upload batches", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  it("sends uploadBatchId as upload_batch_id on the upload and the batch save", async () => {
+    const uploadBatchId = "5f0c2b1e-7a4d-4e8b-9c3f-2d6a1b0e9f47"
+    const responses: unknown[] = [[], { success: true }]
+    const fetchMock = vi.fn(
+      async () =>
+        new Response(JSON.stringify(responses.shift()), { status: 200 }),
+    )
+    vi.stubGlobal("fetch", fetchMock)
+    const api = new OpenSeaAPI({ apiKey: "key", authToken: "jwt" })
+
+    await api.walletAuth.createDropItemMediaUpload("drop", {
+      filenames: ["1.png", "2.png"],
+      uploadBatchId,
+    })
+    const saved = await api.walletAuth.saveDropItemMediaBatch("drop", {
+      uploadBatchId,
+      filenames: ["1.png", "2.png"],
+    })
+
+    const bodies = fetchMock.mock.calls.map(call => {
+      const [url, init] = call as unknown as [string, RequestInit]
+      return { url, body: JSON.parse(String(init.body)) }
+    })
+    expect(bodies).toEqual([
+      {
+        url: expect.stringContaining("/api/v2/drops/drop/items/media"),
+        body: { filenames: ["1.png", "2.png"], upload_batch_id: uploadBatchId },
+      },
+      {
+        url: expect.stringContaining(
+          "/api/v2/drops/drop/items/media/save-batch",
+        ),
+        body: { upload_batch_id: uploadBatchId, filenames: ["1.png", "2.png"] },
+      },
+    ])
+    expect(saved).toEqual({ success: true })
   })
 })

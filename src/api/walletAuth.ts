@@ -228,6 +228,10 @@ export class WalletAuthAPI {
    * caller must submit unchanged, so the response is not camelized. Otherwise a
    * legitimate field name such as S3's `success_action_status` comes back as
    * `successActionStatus` and the form no longer matches the signed policy.
+   *
+   * To save the items in bulk, generate one UUID for the set of files, pass it
+   * as `uploadBatchId` on every request (each takes up to 50 filenames), then
+   * save them by filename with `saveDropItemMediaBatch`.
    */
   createDropItemMediaUpload(
     slug: string,
@@ -242,6 +246,11 @@ export class WalletAuthAPI {
     )
   }
 
+  /**
+   * @deprecated Use `saveDropItemMediaBatch`, which saves the same items by
+   * `uploadBatchId` and filename. This save sends every media token back and
+   * the API checks each file separately, so it slows down with drop size.
+   */
   saveDropItemMedia(
     slug: string,
     body: WalletAuthRequest<"save_drop_item_media">,
@@ -251,6 +260,22 @@ export class WalletAuthAPI {
       `/api/v2/drops/${segment(slug)}/items/media/save`,
       body,
     )
+  }
+
+  /**
+   * Save the drop's items from files uploaded with one `uploadBatchId` through
+   * `createDropItemMediaUpload`, naming them by filename (up to 15,000). Each
+   * save replaces the drop's items. A manifest from
+   * `createDropCollectionManifestUpload` supplies token ids and metadata;
+   * without one, items are numbered 1 to n in the order of `filenames`.
+   */
+  saveDropItemMediaBatch(
+    slug: string,
+    body: WalletAuthRequest<"save_drop_item_media_batch">,
+  ) {
+    return this.fetcher.request<
+      OperationResponse<"save_drop_item_media_batch">
+    >("POST", `/api/v2/drops/${segment(slug)}/items/media/save-batch`, body)
   }
 
   /**
@@ -284,7 +309,8 @@ export class WalletAuthAPI {
    * `UploadContext.fields` is an opaque signed multipart field map that the
    * caller must submit unchanged, so the response is not camelized. Unlike the
    * other upload contexts, the returned token is not passed to a later call:
-   * the next `saveDropItemMedia` reads the stored manifest.
+   * the next `saveDropItemMediaBatch` (or deprecated `saveDropItemMedia`)
+   * reads the stored manifest.
    */
   createDropCollectionManifestUpload(slug: string) {
     return this.fetcher.request<

@@ -1,5 +1,17 @@
 # @opensea/sdk
 
+## 12.11.0
+
+### Minor Changes
+
+- 07d0bdc: Add `walletAuth.saveDropItemMediaBatch(slug, { uploadBatchId, filenames })`, which saves a drop's items from one upload batch by filename (up to 15,000). Pass the same `uploadBatchId`, a UUID you generate once per set of files, to every `walletAuth.createDropItemMediaUpload` call for that set. `walletAuth.saveDropItemMedia`, which saves by media token, is deprecated and keeps working.
+
+### Patch Changes
+
+- Updated dependencies [bab8feb]
+- Updated dependencies [07d0bdc]
+  - @opensea/api-types@0.15.0
+
 ## 12.10.2
 
 ### Patch Changes
